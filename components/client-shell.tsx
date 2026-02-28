@@ -16,7 +16,6 @@ export default function ClientShell({ children }: { children: React.ReactNode })
         <main className="page-enter">{children}</main>
         {!isAdmin && <Footer />}
       </div>
-      {/* Secret admin entry */}
       <Link href="/vault-x9k2m" className="fixed bottom-0 right-0 w-4 h-4 z-[9999] opacity-0" />
     </>
   );

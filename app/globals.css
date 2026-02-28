@@ -4,10 +4,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
 html{scroll-behavior:smooth}
-body{background:#080C12;color:#D8D0C6;font-family:'DM Sans',sans-serif;overflow-x:hidden}
+body{background:#080C12;color:#D8D0C6;font-family:'DM Sans',sans-serif;overflow-x:hidden;font-size:16px}
 ::selection{background:rgba(196,151,103,0.25);color:#F0EBE5}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#050810}::-webkit-scrollbar-thumb{background:#1A2030;border-radius:2px}
-*{scrollbar-width:thin;scrollbar-color:#1A2030 #050810}
+*{scrollbar-width:thin;scrollbar-color:#1A2030 #050810;box-sizing:border-box}
 input:focus,textarea:focus,select:focus{border-color:#90714F!important;box-shadow:0 0 0 1px rgba(144,113,79,0.2)!important;outline:none}
 select option{background:#0E1319;color:#D8D0C6}
 
@@ -23,5 +23,13 @@ select option{background:#0E1319;color:#D8D0C6}
 @keyframes glitchClip{0%{clip-path:inset(40% 0 61% 0)}20%{clip-path:inset(92% 0 1% 0)}40%{clip-path:inset(43% 0 1% 0)}60%{clip-path:inset(25% 0 58% 0)}80%{clip-path:inset(54% 0 7% 0)}100%{clip-path:inset(58% 0 43% 0)}}
 @keyframes flickerIn{0%{opacity:0}10%{opacity:0.6}12%{opacity:0.2}20%{opacity:0.8}22%{opacity:0.3}40%{opacity:1}}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 
 .page-enter{animation:fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) forwards}
+
+/* Placeholder images shimmer */
+.img-placeholder{
+  background:linear-gradient(110deg, #0E1319 30%, #1A2030 50%, #0E1319 70%);
+  background-size:200% 100%;
+  animation:shimmer 2.5s ease-in-out infinite;
+}
