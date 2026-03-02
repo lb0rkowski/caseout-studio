@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
-import db from "@/lib/db";
-import { RowDataPacket } from "mysql2";
+import { getAdmin } from "@/lib/db";
 
 export async function GET() {
   try {
-    const [rows] = await db.query<RowDataPacket[]>("SELECT * FROM messages ORDER BY created_at DESC");
-    return NextResponse.json(rows);
-  } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
+    const admin = getAdmin();
+    const { data, error } = await admin
+      .from("messages")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return NextResponse.json(data || []);
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }

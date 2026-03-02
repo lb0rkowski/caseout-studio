@@ -110,7 +110,7 @@ export default function AdminPage(){
         <div className="font-mono text-[11px] text-cs-dim tracking-[0.15em] mb-4 mt-10">INFORMACJE</div>
         <div className="bg-cs-card border border-cs-line p-5 md:p-8 rounded-sm space-y-3">
           <div className="flex justify-between"><span className="font-body text-base text-cs-muted">Wersja</span><span className="font-mono text-sm text-cs-gold">1.0.0</span></div>
-          <div className="flex justify-between"><span className="font-body text-base text-cs-muted">Baza danych</span><span className="font-mono text-sm text-cs-green">MySQL · home.pl</span></div>
+          <div className="flex justify-between"><span className="font-body text-base text-cs-muted">Baza danych</span><span className="font-mono text-sm text-cs-green">Supabase · Postgres</span></div>
           <div className="flex justify-between"><span className="font-body text-base text-cs-muted">Hosting</span><span className="font-mono text-sm text-cs-text">Vercel</span></div>
         </div>
       </>}
