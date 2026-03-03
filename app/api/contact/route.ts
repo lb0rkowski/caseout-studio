@@ -7,7 +7,8 @@ export async function POST(req: NextRequest) {
     if (!name || !email || !message)
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
 
-    const { error } = await supabase
+    const sb = getSupabase();
+    const { error } = await sb
       .from("messages")
       .insert({ name, email, message });
 

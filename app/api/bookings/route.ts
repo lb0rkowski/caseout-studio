@@ -3,7 +3,8 @@ import { getSupabase, getAdmin } from "@/lib/db";
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
+    const sb = getSupabase();
+    const { data, error } = await sb
       .from("bookings")
       .select("*")
       .order("date", { ascending: true })
@@ -13,7 +14,7 @@ export async function GET() {
 
     const bookings = (data || []).map((r: any) => ({
       ...r,
-      date: r.date, // Supabase zwraca DATE jako string YYYY-MM-DD
+      date: r.date,
       notes: r.notes || "",
     }));
 
@@ -29,19 +30,9 @@ export async function POST(req: NextRequest) {
     if (!date || hour == null || !name || !email || !phone)
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
 
-    // Sprawdź kolizję
-    const { data: existing } = await supabase
-      .from("bookings")
-      .select("id")
-      .eq("date", date)
-      .eq("status", "confirmed");
+    const sb = getSupabase();
 
-    const conflict = (existing || []).some(
-      (b: any) => hour < b.hour + b.duration && hour + (duration || 2) > b.hour
-    );
-
-    // Uproszczona kolizja — sprawdzamy po stronie klienta też
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("bookings")
       .insert({
         date, hour,
