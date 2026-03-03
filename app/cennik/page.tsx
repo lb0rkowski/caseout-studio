@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { SectionHead, Sect, RevealDiv, GlowBtn } from "@/components/ui";
-import { PACKAGES, HOURLY_RATE, WEEKEND_SURCHARGE } from "@/lib/data";
+import { PACKAGES, HOURLY_RATE, WEEKEND_SURCHARGE, Package } from "@/lib/data";
 
 export default function CennikPage() {
   return (
@@ -54,15 +54,15 @@ export default function CennikPage() {
         <SectionHead title="Pakiety" sub="bundles" />
         <p className="font-body text-base md:text-lg text-cs-muted text-center max-w-[600px] mx-auto mb-10">Zamow pakiet godzin i zaoszczedz. Pakiety mozna wykorzystac w dowolnym terminie.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">{PACKAGES.map((p, i) => {
-          const priceNum = parseInt(p.price);
-          const hoursNum = parseInt(p.hours);
+          const priceNum = p.price;
+          const hoursNum = p.hours;
           const perHour = Math.round(priceNum / hoursNum);
           const saved = (HOURLY_RATE * hoursNum) - priceNum;
           return (
             <RevealDiv key={i} delay={i * 80}>
               <div className="bg-cs-card border border-cs-line rounded-sm p-7 md:p-9 relative overflow-hidden">
                 {i === 2 && <div className="absolute -top-px left-1/2 -translate-x-1/2 font-mono text-[9px] text-cs-deep bg-cs-gold px-4 py-1 tracking-[0.2em] font-bold">BEST VALUE</div>}
-                <div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.15em] mb-2">{p.hours} STUDIO TIME</div>
+                <div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.15em] mb-2">{p.hours}H STUDIO TIME</div>
                 <h3 className="font-display text-xl md:text-2xl text-cs-white uppercase mb-4">{p.name}</h3>
                 <div className="flex items-baseline gap-2 mb-1">
                   <span className="font-display text-3xl md:text-4xl text-cs-gold font-bold">{priceNum}</span>
@@ -71,7 +71,7 @@ export default function CennikPage() {
                 <div className="font-mono text-[11px] text-cs-gold-dim mb-1">{perHour} zl/h</div>
                 <div className="font-mono text-[11px] text-cs-green mb-4">Oszczedzasz {saved} zl</div>
                 <p className="font-body text-sm md:text-base text-cs-dim">{p.desc}</p>
-                <Link href="/rezerwacje" className="inline-block w-full mt-6"><GlowBtn ghost className="w-full">Wybierz pakiet</GlowBtn></Link>
+                <Link href={"/rezerwacje?package="+p.id} className="inline-block w-full mt-6"><GlowBtn ghost className="w-full">Wybierz pakiet</GlowBtn></Link>
               </div>
             </RevealDiv>
           );

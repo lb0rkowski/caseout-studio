@@ -2,12 +2,13 @@ export interface Booking {
   id: number; date: string; hour: number; duration: number; type: string;
   name: string; email: string; phone: string; notes: string;
   status: "confirmed" | "cancelled" | "pending";
+  order_number?: string;
 }
 export interface SessionType { id: string; name: string; icon: string; color: string; }
 export interface Service { title: string; desc: string; icon: string; price: string; tag: string; }
 export interface PortfolioItem { artist: string; title: string; type: string; year: string; hue: number; }
 export interface PricingPlan { name: string; price: string; unit: string; features: string[]; highlight: boolean; }
-export interface Package { name: string; hours: string; price: string; desc: string; }
+export interface Package { id: string; name: string; hours: number; price: number; desc: string; minSessions: number; discount: string; }
 
 export const SESSION_TYPES: SessionType[] = [
   { id: "recording", name: "Recording", icon: "🎙️", color: "#C49767" },
@@ -39,9 +40,9 @@ export const PRICING: PricingPlan[] = [
   { name: "WEEKEND", price: "115", unit: "zl/h", features: ["Nagranie wokalu", "Dostep do sprzetu", "Inzynier dzwieku", "WAV + MP3", "Sobota 12:00-20:00"], highlight: false },
 ];
 export const PACKAGES: Package[] = [
-  { name: "Singiel", hours: "4h", price: "360", desc: "1 sesja nagraniowa · 10% taniej" },
-  { name: "EP", hours: "12h", price: "960", desc: "3 sesje · 5 trackow · 20% taniej" },
-  { name: "Album", hours: "32h", price: "2240", desc: "8 sesji · 10+ trackow · 30% taniej" },
+  { id: "singiel", name: "Singiel", hours: 4, price: 360, desc: "1 sesja nagraniowa", minSessions: 1, discount: "10%" },
+  { id: "ep", name: "EP", hours: 12, price: 960, desc: "3-5 trackow", minSessions: 2, discount: "20%" },
+  { id: "album", name: "Album", hours: 32, price: 2240, desc: "10+ trackow", minSessions: 2, discount: "30%" },
 ];
 export const HOURLY_RATE = 100;
 export const WEEKEND_SURCHARGE = 15;

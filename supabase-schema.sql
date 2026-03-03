@@ -12,7 +12,9 @@ CREATE TABLE IF NOT EXISTS bookings (
   email TEXT NOT NULL,
   phone TEXT NOT NULL,
   notes TEXT DEFAULT '',
-  status TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'cancelled', 'pending'))
+  status TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'cancelled', 'pending')),
+  order_number TEXT,
+  package_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS messages (
