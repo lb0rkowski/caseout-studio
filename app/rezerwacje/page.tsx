@@ -195,7 +195,6 @@ export default function RezerwacjePage(){
         <div className="font-mono text-xs text-cs-dim mt-3">Potwierdzenie: {confirm.email}</div>
         <div className="flex gap-3 justify-center mt-6">
           <GlowBtn ghost onClick={()=>setConfirm(null)}>OK</GlowBtn>
-          <a href={makeGCalUrl(confirm)} target="_blank" rel="noopener noreferrer"><GlowBtn>Dodaj do Google Calendar</GlowBtn></a>
         </div>
       </div></RevealDiv>}
 
@@ -207,7 +206,7 @@ export default function RezerwacjePage(){
             <span className="font-display text-xl md:text-2xl text-cs-white min-w-[200px] md:min-w-[240px] text-center uppercase tracking-wide">{MO[mo]} {yr}</span>
             <button onClick={()=>setCur(new Date(yr,mo+1))} className="bg-transparent border border-cs-line text-cs-muted px-4 py-2.5 cursor-pointer font-body text-base rounded-sm hover:border-cs-gold-dim transition-colors">&rsaquo;</button>
           </div>
-          {selDate && step > 0 && <button onClick={()=>{setStep(0);setSelDate(null);setSelHours([]);setErr("");}} className="font-mono text-[11px] text-cs-gold-dim hover:text-cs-gold cursor-pointer bg-transparent border border-cs-line px-4 py-2 rounded-sm transition-colors">&larr; Wrocdo kalendarza</button>}
+          {selDate && step > 0 && <button onClick={()=>{setStep(0);setSelDate(null);setSelHours([]);setErr("");}} className="font-mono text-[11px] text-cs-gold-dim hover:text-cs-gold cursor-pointer bg-transparent border border-cs-line px-4 py-2 rounded-sm transition-colors">&larr; Wroc do kalendarza</button>}
         </div>
 
         {/* Calendar */}
@@ -372,7 +371,7 @@ export default function RezerwacjePage(){
 
             <div className="flex gap-4 mt-8 flex-wrap">
               <GlowBtn onClick={book} disabled={busy||Object.keys(fieldErr).length>0}>{busy?"Wysylanie...":"Potwierdz Rezerwacje"}</GlowBtn>
-              <GlowBtn ghost onClick={()=>{setStep(1);setErr("");}}>Wrocdo godzin</GlowBtn>
+              <GlowBtn ghost onClick={()=>{setStep(1);setErr("");}}>Wroc do godzin</GlowBtn>
               <GlowBtn ghost onClick={()=>{setStep(0);setSelDate(null);setSelHours([]);setErr("");setFieldErr({});}}>Anuluj</GlowBtn>
             </div>
           </div>
