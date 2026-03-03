@@ -13,6 +13,7 @@ export async function GET() {
 
     return NextResponse.json(data || []);
   } catch (e: any) {
+    console.error("GET /api/messages error:", e);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

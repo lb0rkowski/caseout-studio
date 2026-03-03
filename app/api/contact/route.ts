@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabase } from "@/lib/db";
+import { getAdmin } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,8 +7,8 @@ export async function POST(req: NextRequest) {
     if (!name || !email || !message)
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
 
-    const sb = getSupabase();
-    const { error } = await sb
+    const admin = getAdmin();
+    const { error } = await admin
       .from("messages")
       .insert({ name, email, message });
 
@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (e: any) {
+    console.error("POST /api/contact error:", e);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
