@@ -15,42 +15,35 @@ export async function POST(req: NextRequest) {
       "<tr><td style=\"padding:8px 12px;border-bottom:1px solid #1A1F2B;\">" + s.date + "</td><td style=\"padding:8px 12px;border-bottom:1px solid #1A1F2B;\">" + s.hour + ":00 - " + (s.hour + s.duration) + ":00</td><td style=\"padding:8px 12px;border-bottom:1px solid #1A1F2B;\">" + s.duration + "h</td></tr>"
     ).join("");
 
-    const html = \`
-      <div style="max-width:600px;margin:0 auto;background:#080C12;color:#D8D0C6;font-family:sans-serif;padding:40px;">
-        <div style="text-align:center;margin-bottom:30px;">
-          <h1 style="color:#C49767;font-size:24px;margin:0;">CASEOUT STUDIO</h1>
-          <p style="color:#706860;font-size:12px;letter-spacing:2px;margin-top:8px;">POTWIERDZENIE REZERWACJI</p>
-        </div>
-        <div style="background:#0E1319;border:1px solid #1A1F2B;border-radius:4px;padding:24px;margin-bottom:20px;">
-          <p style="color:#C49767;font-size:14px;letter-spacing:1px;margin:0 0 8px;">NUMER ZAMOWIENIA</p>
-          <p style="color:#D4A87A;font-size:28px;font-weight:bold;margin:0;letter-spacing:2px;">\${orderNumber}</p>
-        </div>
-        <div style="background:#0E1319;border:1px solid #1A1F2B;border-radius:4px;padding:24px;margin-bottom:20px;">
-          <p style="margin:0 0 4px;color:#706860;font-size:12px;">KLIENT</p>
-          <p style="margin:0;font-size:16px;color:#D8D0C6;">\${name}</p>
-          \${packageName ? '<p style="margin:8px 0 0;color:#C49767;font-size:14px;">Pakiet: ' + packageName + '</p>' : ''}
-          <table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:14px;color:#D8D0C6;">
-            <tr style="color:#706860;font-size:12px;">
-              <td style="padding:8px 12px;border-bottom:1px solid #1A1F2B;">DATA</td>
-              <td style="padding:8px 12px;border-bottom:1px solid #1A1F2B;">GODZINY</td>
-              <td style="padding:8px 12px;border-bottom:1px solid #1A1F2B;">CZAS</td>
-            </tr>
-            \${sessionsHtml}
-          </table>
-        </div>
-        <div style="background:#0E1319;border:1px solid #1A1F2B;border-radius:4px;padding:24px;margin-bottom:20px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="color:#706860;font-size:14px;">Do zaplaty</span>
-            <span style="color:#C49767;font-size:24px;font-weight:bold;">\${totalPrice} zl</span>
-          </div>
-          <p style="color:#706860;font-size:12px;margin:8px 0 0;">Platnosc: \${payMethod === 'payu' ? 'Online (PayU)' : 'Na miejscu'}</p>
-        </div>
-        <div style="text-align:center;padding:20px 0;border-top:1px solid #1A1F2B;">
-          <p style="color:#706860;font-size:12px;margin:0;">Caseout Studio | ul. Kopernika 30, Warszawa</p>
-          <p style="color:#403830;font-size:11px;margin:8px 0 0;">Ten email zostal wyslany automatycznie.</p>
-        </div>
-      </div>
-    \`;
+    const pkgLine = packageName ? "<p style=\"margin:8px 0 0;color:#C49767;font-size:14px;\">Pakiet: " + packageName + "</p>" : "";
+    const payLabel = payMethod === "payu" ? "Online (PayU)" : "Na miejscu";
+
+    const html = [
+      "<div style=\"max-width:600px;margin:0 auto;background:#080C12;color:#D8D0C6;font-family:sans-serif;padding:40px;\">",
+      "<div style=\"text-align:center;margin-bottom:30px;\">",
+      "<h1 style=\"color:#C49767;font-size:24px;margin:0;\">CASEOUT STUDIO</h1>",
+      "<p style=\"color:#706860;font-size:12px;letter-spacing:2px;margin-top:8px;\">POTWIERDZENIE REZERWACJI</p>",
+      "</div>",
+      "<div style=\"background:#0E1319;border:1px solid #1A1F2B;border-radius:4px;padding:24px;margin-bottom:20px;\">",
+      "<p style=\"color:#C49767;font-size:14px;letter-spacing:1px;margin:0 0 8px;\">NUMER ZAMOWIENIA</p>",
+      "<p style=\"color:#D4A87A;font-size:28px;font-weight:bold;margin:0;letter-spacing:2px;\">" + orderNumber + "</p>",
+      "</div>",
+      "<div style=\"background:#0E1319;border:1px solid #1A1F2B;border-radius:4px;padding:24px;margin-bottom:20px;\">",
+      "<p style=\"margin:0 0 4px;color:#706860;font-size:12px;\">KLIENT</p>",
+      "<p style=\"margin:0;font-size:16px;color:#D8D0C6;\">" + name + "</p>",
+      pkgLine,
+      "<table style=\"width:100%;border-collapse:collapse;margin-top:16px;font-size:14px;color:#D8D0C6;\">",
+      "<tr style=\"color:#706860;font-size:12px;\"><td style=\"padding:8px 12px;border-bottom:1px solid #1A1F2B;\">DATA</td><td style=\"padding:8px 12px;border-bottom:1px solid #1A1F2B;\">GODZINY</td><td style=\"padding:8px 12px;border-bottom:1px solid #1A1F2B;\">CZAS</td></tr>",
+      sessionsHtml,
+      "</table></div>",
+      "<div style=\"background:#0E1319;border:1px solid #1A1F2B;border-radius:4px;padding:24px;margin-bottom:20px;\">",
+      "<p style=\"color:#706860;font-size:14px;margin:0;\">Do zaplaty: <span style=\"color:#C49767;font-size:24px;font-weight:bold;\">" + totalPrice + " zl</span></p>",
+      "<p style=\"color:#706860;font-size:12px;margin:8px 0 0;\">Platnosc: " + payLabel + "</p>",
+      "</div>",
+      "<div style=\"text-align:center;padding:20px 0;border-top:1px solid #1A1F2B;\">",
+      "<p style=\"color:#706860;font-size:12px;margin:0;\">Caseout Studio | ul. Kopernika 30, Warszawa</p>",
+      "</div></div>",
+    ].join("\n");
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",

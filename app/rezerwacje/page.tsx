@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { SectionHead, Sect, RevealDiv, GlowBtn } from "@/components/ui";
 import { useBookings } from "@/lib/store";
 import { SESSION_TYPES, PACKAGES, HOURLY_RATE, WEEKEND_SURCHARGE, Booking, Package } from "@/lib/data";
@@ -242,7 +242,7 @@ export default function RezerwacjePage(){
   </div>;
 
   // ─── CALENDAR RENDERER ───
-  const Calendar=({onDayClick,dayExtra}:{onDayClick:(day:number)=>void;dayExtra?:(ds:string,di:number)=>React.ReactNode})=>(
+  const Calendar=({onDayClick,dayExtra}:{onDayClick:(day:number)=>void;dayExtra?:(ds:string,di:number)=>any})=>(
     <div className="bg-cs-card border border-cs-line rounded-sm overflow-hidden">
       <div className="grid grid-cols-7">
         {DN.map(d=><div key={d} className="py-3 px-1 text-center font-mono text-[11px] md:text-xs text-cs-dim border-b border-cs-line font-bold">{d}</div>)}
