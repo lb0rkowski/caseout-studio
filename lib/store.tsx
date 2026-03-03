@@ -4,7 +4,7 @@ import { Booking } from "./data";
 
 interface Ctx {
   bookings: Booking[]; loading: boolean;
-  addBooking: (b: Omit<Booking, "id">) => Promise<Booking | null>;
+  addBooking: (b: Omit<Booking, "id">) => Promise<{ booking?: Booking; error?: string }>;
   removeBooking: (id: number) => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -26,14 +26,14 @@ export function BookingProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const addBooking = async (b: Omit<Booking, "id">): Promise<Booking | null> => {
+  const addBooking = async (b: Omit<Booking, "id">): Promise<{ booking?: Booking; error?: string }> => {
     try {
       const res = await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
-      if (!res.ok) return null;
-      const nb: Booking = await res.json();
-      setBookings(p => [...p, nb]);
-      return nb;
-    } catch { return null; }
+      const data = await res.json();
+      if (!res.ok) return { error: data.error || "Blad serwera" };
+      setBookings(p => [...p, data]);
+      return { booking: data };
+    } catch (e: any) { return { error: e.message || "Blad polaczenia" }; }
   };
 
   const removeBooking = async (id: number) => {
