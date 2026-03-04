@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       const { sessions, type, name, email, phone, notes, package_id } = body;
 
       const errors: string[] = [];
-      if (!name || name.trim().length < 2) errors.push("Imie wymagane");
+      if (!name || name.trim().length < 3 || !name.trim().includes(" ")) errors.push("Podaj imie i nazwisko");
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("Podaj prawidlowy email");
       if (!phone || phone.replace(/\D/g, "").length < 7) errors.push("Podaj prawidlowy telefon");
       if (sessions.length === 0) errors.push("Brak sesji");
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     // Single booking mode
     const { date, hour, duration, type, name, email, phone, notes, status } = body;
     const errors: string[] = [];
-    if (!name || name.trim().length < 2) errors.push("Imie wymagane");
+    if (!name || name.trim().length < 3 || !name.trim().includes(" ")) errors.push("Podaj imie i nazwisko");
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("Podaj prawidlowy email");
     if (!phone || phone.replace(/\D/g, "").length < 7) errors.push("Podaj prawidlowy telefon");
     if (!date) errors.push("Nieprawidlowa data");

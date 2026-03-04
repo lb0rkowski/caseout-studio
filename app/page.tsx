@@ -78,11 +78,9 @@ export default function HomePage() {
 
         <div className="text-center relative z-[2] px-5 md:px-8">
           {/* Logo */}
-          <div className="w-28 h-28 md:w-36 md:h-36 mx-auto mb-8 md:mb-12 rounded-full relative flex items-center justify-center" style={{ opacity: loaded ? 1 : 0, transform: loaded ? "scale(1)" : "scale(0.8)", transition: "all 1.2s cubic-bezier(0.16,1,0.3,1)" }}>
-            <div className="absolute -inset-6 rounded-full" style={{ background: "radial-gradient(circle, rgba(196,151,103,0.08) 0%, transparent 70%)", animation: "pulseSlow 4s ease-in-out infinite" }} />
-            <div className="w-20 h-20 md:w-28 md:h-28 rounded-full border border-cs-gold/20 flex items-center justify-center" style={{ animation: "borderGlow 3s ease infinite" }}>
-              <img src="/logo.png" alt="Caseout Studio" className="w-16 h-16 md:w-24 md:h-24 object-contain" />
-            </div>
+          <div className="w-28 h-28 md:w-40 md:h-40 mx-auto mb-8 md:mb-12 relative flex items-center justify-center" style={{ opacity: loaded ? 1 : 0, transform: loaded ? "scale(1)" : "scale(0.8)", transition: "all 1.2s cubic-bezier(0.16,1,0.3,1)" }}>
+            <div className="absolute -inset-8 rounded-full" style={{ background: "radial-gradient(circle, rgba(196,151,103,0.06) 0%, transparent 70%)", animation: "pulseSlow 4s ease-in-out infinite" }} />
+            <img src="/logo.png" alt="Caseout Studio" className="w-24 h-24 md:w-36 md:h-36 object-contain drop-shadow-[0_0_30px_rgba(196,151,103,0.15)]" />
           </div>
 
           {/* Location */}
