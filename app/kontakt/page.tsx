@@ -1,39 +1,89 @@
 "use client";
-import { useState } from "react";
-import { SectionHead, Sect, RevealDiv, GlowBtn } from "@/components/ui";
+import { SectionHead, Sect, RevealDiv } from "@/components/ui";
+
+const SOCIALS = [
+  { name: "Instagram", url: "https://instagram.com/caseoutstudio", icon: "IG" },
+  { name: "TikTok", url: "https://tiktok.com/@caseoutstudio", icon: "TT" },
+  { name: "YouTube", url: "https://youtube.com/@caseoutstudio", icon: "YT" },
+  { name: "SoundCloud", url: "https://soundcloud.com/caseoutstudio", icon: "SC" },
+];
 
 export default function KontaktPage() {
-  const [form, setForm] = useState({ name: "", email: "", msg: "" });
-  const [status, setStatus] = useState<"idle"|"sending"|"sent"|"error">("idle");
-  const send = async () => {
-    if (!form.name || !form.email || !form.msg) return;
-    setStatus("sending");
-    try { const r = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: form.name, email: form.email, message: form.msg }) }); if (!r.ok) throw new Error(); setStatus("sent"); setForm({ name: "", email: "", msg: "" }); setTimeout(() => setStatus("idle"), 4000); }
-    catch { setStatus("error"); setTimeout(() => setStatus("idle"), 3000); }
-  };
-  const inp = "w-full p-4 bg-cs-deep border border-cs-line rounded-sm text-cs-text font-body text-base outline-none transition-all duration-300";
-
   return (
     <div className="pt-20 md:pt-28">
       <Sect>
         <SectionHead title="Kontakt" sub="get in touch" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
-          <RevealDiv>
-            <div className="mb-10"><div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.2em] mb-4">ADRES</div><p className="font-body text-base md:text-lg text-cs-text leading-relaxed">Caseout Studio<br/>ul. Mikołaja Kopernika 30<br/>00-336 Warszawa</p></div>
-            <div className="mb-10"><div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.2em] mb-4">GODZINY</div><p className="font-body text-base md:text-lg text-cs-text leading-relaxed">Pon–Pt: 10:00 – 22:00<br/>Sob: 12:00 – 20:00<br/>Nd: Zamknięte</p></div>
-            <div className="mb-10"><div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.2em] mb-4">EMAIL / TEL</div><p className="font-body text-base md:text-lg text-cs-text leading-relaxed">hello@caseoutstudio.pl<br/>+48 XXX XXX XXX</p></div>
-            <div className="h-[200px] md:h-[240px] bg-cs-card border border-cs-line flex items-center justify-center relative overflow-hidden rounded-sm"><div className="absolute inset-0 opacity-[0.04] grid-bg" style={{ backgroundSize: "20px 20px" }} /><span className="font-mono text-[11px] text-cs-dim">🗺 GOOGLE MAPS · KOPERNIKA 30</span></div>
-          </RevealDiv>
+
+        <div className="max-w-[800px] mx-auto">
+          {/* Info cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
+            <RevealDiv>
+              <div className="bg-cs-card border border-cs-line rounded-sm p-7 md:p-9">
+                <div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.2em] mb-4">ADRES</div>
+                <div className="font-display text-xl text-cs-white mb-2">Caseout Studio</div>
+                <div className="font-body text-base text-cs-muted leading-relaxed">
+                  ul. Mikolaja Kopernika 30<br/>
+                  00-336 Warszawa
+                </div>
+                <a href="https://maps.google.com/?q=Kopernika+30+Warszawa" target="_blank" rel="noopener noreferrer" className="inline-block mt-4 font-mono text-[11px] text-cs-gold-dim hover:text-cs-gold transition-colors px-3 py-1.5 rounded-sm border border-cs-line hover:border-cs-gold-dim">Pokaz na mapie &rarr;</a>
+              </div>
+            </RevealDiv>
+
+            <RevealDiv delay={100}>
+              <div className="bg-cs-card border border-cs-line rounded-sm p-7 md:p-9">
+                <div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.2em] mb-4">KONTAKT</div>
+                <div className="space-y-4">
+                  <div>
+                    <div className="font-mono text-[10px] text-cs-dim mb-1">EMAIL</div>
+                    <a href="mailto:kontakt@caseoutstudio.pl" className="font-body text-base text-cs-gold hover:text-cs-gold-dim transition-colors">kontakt@caseoutstudio.pl</a>
+                  </div>
+                  <div>
+                    <div className="font-mono text-[10px] text-cs-dim mb-1">TELEFON</div>
+                    <a href="tel:+48600000000" className="font-body text-base text-cs-text hover:text-cs-gold transition-colors">+48 600 000 000</a>
+                  </div>
+                </div>
+              </div>
+            </RevealDiv>
+          </div>
+
+          {/* Godziny */}
           <RevealDiv delay={150}>
-            <div className="flex flex-col gap-5">
-              <div><label className="font-mono text-[11px] text-cs-dim tracking-[0.15em] mb-2 block">IMIĘ</label><input className={inp} value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="—" /></div>
-              <div><label className="font-mono text-[11px] text-cs-dim tracking-[0.15em] mb-2 block">EMAIL</label><input className={inp} type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="—" /></div>
-              <div><label className="font-mono text-[11px] text-cs-dim tracking-[0.15em] mb-2 block">WIADOMOŚĆ</label><textarea className={`${inp} min-h-[180px] resize-y`} value={form.msg} onChange={e=>setForm({...form,msg:e.target.value})} placeholder="Opisz swój projekt..." /></div>
-              <GlowBtn onClick={send} disabled={status==="sending"} className="self-start">{status==="sending"?"Wysyłanie...":"Wyślij Wiadomość"}</GlowBtn>
-              {status==="sent"&&<div className="font-mono text-xs text-cs-green">✓ Wiadomość wysłana — odezwiemy się wkrótce</div>}
-              {status==="error"&&<div className="font-mono text-xs text-cs-red">✗ Błąd — spróbuj ponownie</div>}
+            <div className="bg-cs-card border border-cs-line rounded-sm p-7 md:p-9 mb-10">
+              <div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.2em] mb-4">GODZINY OTWARCIA</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <div className="font-body text-base text-cs-white mb-1">Poniedzialek - Piatek</div>
+                  <div className="font-mono text-sm text-cs-gold">10:00 - 22:00</div>
+                </div>
+                <div>
+                  <div className="font-body text-base text-cs-white mb-1">Sobota</div>
+                  <div className="font-mono text-sm text-cs-gold">12:00 - 20:00</div>
+                </div>
+                <div>
+                  <div className="font-body text-base text-cs-white mb-1">Niedziela</div>
+                  <div className="font-mono text-sm text-cs-red">Zamkniete</div>
+                </div>
+              </div>
             </div>
-            <div className="mt-10 flex gap-3 flex-wrap">{["Instagram","YouTube","SoundCloud","Spotify","TikTok"].map(s=><div key={s} className="px-4 py-2.5 border border-cs-line font-mono text-[11px] text-cs-dim cursor-pointer tracking-[0.1em] hover:text-cs-gold hover:border-cs-gold-dim transition-colors rounded-sm">{s}</div>)}</div>
+          </RevealDiv>
+
+          {/* Social media */}
+          <RevealDiv delay={200}>
+            <div className="text-center">
+              <div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.2em] mb-6">SOCIAL MEDIA</div>
+              <div className="flex justify-center gap-4 flex-wrap">
+                {SOCIALS.map((s) => (
+                  <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer"
+                    className="group flex items-center gap-3 px-6 py-4 rounded-sm transition-all duration-300 hover:-translate-y-1"
+                    style={{ background: "rgba(14,19,25,0.8)", border: "1px solid #1A1F2B" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(196,151,103,0.3)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "#1A1F2B"; }}>
+                    <span className="font-mono text-sm text-cs-gold font-bold">{s.icon}</span>
+                    <span className="font-body text-sm text-cs-muted group-hover:text-cs-text transition-colors">{s.name}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
           </RevealDiv>
         </div>
       </Sect>

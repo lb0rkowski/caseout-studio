@@ -80,7 +80,7 @@ export default function HomePage() {
           {/* Logo */}
           <div className="w-28 h-28 md:w-40 md:h-40 mx-auto mb-8 md:mb-12 relative flex items-center justify-center" style={{ opacity: loaded ? 1 : 0, transform: loaded ? "scale(1)" : "scale(0.8)", transition: "all 1.2s cubic-bezier(0.16,1,0.3,1)" }}>
             <div className="absolute -inset-8 rounded-full" style={{ background: "radial-gradient(circle, rgba(196,151,103,0.06) 0%, transparent 70%)", animation: "pulseSlow 4s ease-in-out infinite" }} />
-            <img src="/logo.png" alt="Caseout Studio" className="w-24 h-24 md:w-36 md:h-36 object-contain drop-shadow-[0_0_30px_rgba(196,151,103,0.15)]" />
+            <img src="/logo.png" alt="Caseout Studio" className="w-24 h-24 md:w-36 md:h-36 object-contain" style={{mixBlendMode:"lighten",filter:"drop-shadow(0 0 30px rgba(196,151,103,0.15))"}} />
           </div>
 
           {/* Location */}

@@ -4,7 +4,6 @@ import { GlowBtn } from "@/components/ui";
 import { useBookings } from "@/lib/store";
 import { SESSION_TYPES } from "@/lib/data";
 
-interface Msg { id:number; created_at:string; name:string; email:string; message:string; is_read:number; }
 
 function makeGCalUrl(b: any) {
   const d = (b.date || "").replace(/-/g, "");
@@ -35,8 +34,8 @@ export default function AdminPage(){
   const[pw,setPw]=useState("");
   const[pwErr,setPwErr]=useState(false);
   const[tab,setTab]=useState("dash");
-  const[msgs,setMsgs]=useState<Msg[]>([]);
-  const[ml,setMl]=useState(false);
+  
+  
   const[sortField,setSortField]=useState<"date"|"name"|"type">("date");
   const[sortDir,setSortDir]=useState<"asc"|"desc">("asc");
   const[hours,setHours]=useState<Record<string,[string,string]|null>>(DEFAULT_HOURS);
@@ -44,7 +43,7 @@ export default function AdminPage(){
   const[hoursSaved,setHoursSaved]=useState(false);
   const[viewMode,setViewMode]=useState<"list"|"timeline">("list");
 
-  useEffect(()=>{if(auth&&tab==="msg"){setMl(true);fetch("/api/messages").then(r=>r.json()).then(d=>setMsgs(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setMl(false));}},[auth,tab]);
+  
 
   if(!auth) return(
     <div className="min-h-screen flex items-center justify-center px-5">
@@ -79,8 +78,8 @@ export default function AdminPage(){
   const sortIcon=(field:string)=>sortField===field?(sortDir==="asc"?" ^":" v"):"";
 
   const del=async(id:number)=>{if(!window.confirm("Usunac te rezerwacje?"))return;await removeBooking(id);};
-  const tabs=[["dash","Dashboard"],["book","Rezerwacje"],["msg","Wiadomosci"],["set","Ustawienia"]] as const;
-  const unread=msgs.filter(m=>!m.is_read).length;
+  const tabs=[["dash","Dashboard"],["book","Rezerwacje"],["set","Ustawienia"]] as const;
+  
 
   // Group bookings by date for timeline
   const groupByDate=(list: typeof bookings)=>{
@@ -174,7 +173,7 @@ export default function AdminPage(){
 
       {/* Tabs */}
       <div className="flex gap-1.5 mb-8 overflow-x-auto pb-1">{tabs.map(([id,l])=><button key={id} onClick={()=>setTab(id)} className="font-mono text-[11px] md:text-xs tracking-[0.1em] px-5 py-3 cursor-pointer transition-all rounded-sm whitespace-nowrap" style={{background:tab===id?"#0E1319":"transparent",border:"1px solid "+(tab===id?"#1A1F2B":"transparent"),color:tab===id?"#C49767":"#403830"}}>
-        {l}{id==="msg"&&unread>0&&<span className="ml-2 bg-cs-gold text-cs-deep text-[9px] px-1.5 py-0.5 rounded-sm font-bold">{unread}</span>}
+        {l}
       </button>)}</div>
 
       {loading&&<div className="text-center py-20"><div className="font-mono text-xs text-cs-dim tracking-wider">LOADING...</div></div>}
@@ -259,20 +258,6 @@ export default function AdminPage(){
             })}</div>
           </div>
         ))}</div>}
-      </>}
-
-      {/* ═══ MESSAGES ═══ */}
-      {tab==="msg"&&<>
-        <div className="font-mono text-[11px] text-cs-dim tracking-[0.15em] mb-4">WIADOMOSCI ({msgs.length})</div>
-        {ml&&<div className="font-mono text-xs text-cs-dim py-12 text-center">Loading...</div>}
-        {!ml&&msgs.length===0&&<div className="font-body text-base text-cs-dim bg-cs-card border border-cs-line p-8 text-center rounded-sm">Brak wiadomosci</div>}
-        <div className="space-y-2">{msgs.map(m=><div key={m.id} className="bg-cs-card border border-cs-line p-5 md:p-6 rounded-sm" style={{borderLeftColor:m.is_read?"#1A1F2B":"#C49767",borderLeftWidth:3}}>
-          <div className="flex flex-col sm:flex-row justify-between gap-2 mb-3">
-            <div><span className="font-body text-base md:text-lg text-cs-text font-semibold">{m.name}</span><span className="font-mono text-[11px] text-cs-dim ml-3">{m.email}</span></div>
-            <span className="font-mono text-[11px] text-cs-dim flex-shrink-0">{new Date(m.created_at).toLocaleDateString("pl")} | {new Date(m.created_at).toLocaleTimeString("pl",{hour:"2-digit",minute:"2-digit"})}</span>
-          </div>
-          <p className="font-body text-base text-cs-muted leading-relaxed">{m.message}</p>
-        </div>)}</div>
       </>}
 
       {/* ═══ SETTINGS ═══ */}
