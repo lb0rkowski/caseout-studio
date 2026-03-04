@@ -51,6 +51,9 @@ export default function AdminPage(){
   const[newBeat,setNewBeat]=useState({title:"",bpm:140,key:"",tags:"",price:200,audio_url:"",cover_url:""});
   const[beatErr,setBeatErr]=useState("");
   const[beatSaving,setBeatSaving]=useState(false);
+  const[uploadFile,setUploadFile]=useState<File|null>(null);
+  const[uploadProgress,setUploadProgress]=useState("");
+  const[dragOver,setDragOver]=useState(false);
   const[offerSaved,setOfferSaved]=useState(false);
 
   useEffect(()=>{
@@ -60,15 +63,57 @@ export default function AdminPage(){
     }
   },[auth,tab]);
 
+  const handleFileDrop=(e:React.DragEvent)=>{
+    e.preventDefault();setDragOver(false);
+    const f=e.dataTransfer.files[0];
+    if(f&&(f.type.startsWith("audio/")||/\.(mp3|wav|ogg|m4a|flac)$/i.test(f.name))){
+      setUploadFile(f);setBeatErr("");
+      if(!newBeat.title){
+        const name=f.name.replace(/\.[^.]+$/,"").replace(/[_-]/g," ");
+        setNewBeat(p=>({...p,title:name}));
+      }
+    }else{setBeatErr("Tylko pliki audio (mp3, wav, ogg, m4a, flac)");}
+  };
+
+  const handleFileSelect=(e:React.ChangeEvent<HTMLInputElement>)=>{
+    const f=e.target.files?.[0];
+    if(f){
+      setUploadFile(f);setBeatErr("");
+      if(!newBeat.title){
+        const name=f.name.replace(/\.[^.]+$/,"").replace(/[_-]/g," ");
+        setNewBeat(p=>({...p,title:name}));
+      }
+    }
+  };
+
   const addBeat=async()=>{
     if(!newBeat.title.trim()){setBeatErr("Podaj tytul");return;}
+    if(!uploadFile&&!newBeat.audio_url){setBeatErr("Dodaj plik audio");return;}
     setBeatSaving(true);setBeatErr("");
+
+    let audioUrl=newBeat.audio_url;
+
+    // Upload file if present
+    if(uploadFile){
+      setUploadProgress("Przesylanie pliku...");
+      try{
+        const fd=new FormData();
+        fd.append("file",uploadFile);
+        const upRes=await fetch("/api/upload",{method:"POST",body:fd});
+        const upData=await upRes.json();
+        if(!upRes.ok){setBeatErr(upData.error||"Blad uploadu");setBeatSaving(false);setUploadProgress("");return;}
+        audioUrl=upData.url;
+        setUploadProgress("");
+      }catch(e:any){setBeatErr("Blad uploadu: "+e.message);setBeatSaving(false);setUploadProgress("");return;}
+    }
+
     try{
-      const res=await fetch("/api/beats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(newBeat)});
+      const res=await fetch("/api/beats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...newBeat,audio_url:audioUrl})});
       const data=await res.json();
       if(!res.ok){setBeatErr(data.error||"Blad");setBeatSaving(false);return;}
       setBeats(p=>[data,...p]);
       setNewBeat({title:"",bpm:140,key:"",tags:"",price:200,audio_url:"",cover_url:""});
+      setUploadFile(null);
     }catch(e:any){setBeatErr(e.message);}
     setBeatSaving(false);
   };
@@ -388,6 +433,37 @@ export default function AdminPage(){
       {tab==="beats"&&<>
         <div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.2em] mb-4">DODAJ NOWY BEAT</div>
         <div className="bg-cs-card border border-cs-line rounded-sm p-5 md:p-6 mb-8">
+          {/* Drag & drop zone */}
+          <div
+            onDragOver={e=>{e.preventDefault();setDragOver(true);}}
+            onDragLeave={()=>setDragOver(false)}
+            onDrop={handleFileDrop}
+            className="border-2 border-dashed rounded-sm p-8 mb-4 text-center transition-all duration-300 cursor-pointer"
+            style={{
+              borderColor:dragOver?"#C49767":uploadFile?"rgba(59,107,59,0.4)":"#1A1F2B",
+              background:dragOver?"rgba(196,151,103,0.04)":uploadFile?"rgba(59,107,59,0.04)":"rgba(5,8,16,0.3)",
+            }}
+            onClick={()=>{const el=document.getElementById("beat-file-input");el?.click();}}
+          >
+            <input id="beat-file-input" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" className="hidden" onChange={handleFileSelect}/>
+            {uploadFile?(
+              <div>
+                <div className="text-3xl mb-2">&#127925;</div>
+                <div className="font-display text-lg text-cs-green">{uploadFile.name}</div>
+                <div className="font-mono text-[11px] text-cs-dim mt-1">{(uploadFile.size/1024/1024).toFixed(1)} MB</div>
+                <button onClick={e=>{e.stopPropagation();setUploadFile(null);}} className="font-mono text-[10px] text-cs-red mt-2 px-3 py-1 rounded-sm cursor-pointer" style={{border:"1px solid rgba(139,48,48,0.2)"}}>Usun plik</button>
+              </div>
+            ):(
+              <div>
+                <div className="text-4xl mb-3" style={{opacity:0.3}}>&#127925;</div>
+                <div className="font-display text-base text-cs-muted mb-1">Przeciagnij plik audio tutaj</div>
+                <div className="font-mono text-[11px] text-cs-dim">lub kliknij zeby wybrac z dysku</div>
+                <div className="font-mono text-[10px] text-cs-dim mt-2">MP3, WAV, OGG, M4A, FLAC &middot; max 50MB</div>
+              </div>
+            )}
+            {uploadProgress&&<div className="font-mono text-[11px] text-cs-gold mt-3">{uploadProgress}</div>}
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
             <div className="col-span-2"><label className="font-mono text-[10px] text-cs-dim mb-1 block">TYTUL *</label><input value={newBeat.title} onChange={e=>setNewBeat({...newBeat,title:e.target.value})} className={inp} placeholder="Midnight Drill"/></div>
             <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">BPM</label><input type="number" value={newBeat.bpm} onChange={e=>setNewBeat({...newBeat,bpm:Number(e.target.value)})} className={inp}/></div>
@@ -396,10 +472,9 @@ export default function AdminPage(){
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
             <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">TAGI (po przecinku)</label><input value={newBeat.tags} onChange={e=>setNewBeat({...newBeat,tags:e.target.value})} className={inp} placeholder="drill, dark, 808"/></div>
             <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">CENA (ZL)</label><input type="number" value={newBeat.price} onChange={e=>setNewBeat({...newBeat,price:Number(e.target.value)})} className={inp}/></div>
-            <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">URL AUDIO (mp3)</label><input value={newBeat.audio_url} onChange={e=>setNewBeat({...newBeat,audio_url:e.target.value})} className={inp} placeholder="https://...mp3"/></div>
+            <div className="flex items-end"><button onClick={addBeat} disabled={beatSaving} className="w-full p-3 rounded-sm font-mono text-[11px] transition-all cursor-pointer" style={{background:"rgba(196,151,103,0.08)",border:"1px solid rgba(196,151,103,0.25)",color:"#C49767"}}>{beatSaving?"Przesylanie...":"+ Dodaj beat"}</button></div>
           </div>
-          {beatErr&&<div className="font-mono text-[11px] text-cs-red mb-3">{beatErr}</div>}
-          <button onClick={addBeat} disabled={beatSaving} className="font-mono text-[11px] px-5 py-2.5 rounded-sm cursor-pointer transition-all" style={{background:"rgba(196,151,103,0.08)",border:"1px solid rgba(196,151,103,0.25)",color:"#C49767"}}>{beatSaving?"Dodawanie...":"+ Dodaj beat"}</button>
+          {beatErr&&<div className="font-mono text-[11px] text-cs-red mt-2">{beatErr}</div>}
         </div>
 
         <div className="font-mono text-[11px] text-cs-dim tracking-[0.15em] mb-4">WSZYSTKIE BEATY ({beats.length})</div>
@@ -413,24 +488,25 @@ export default function AdminPage(){
                   <span className="font-display text-lg text-cs-white">{b.title}</span>
                   <span className="font-mono text-[11px] text-cs-gold-dim">{b.bpm} BPM</span>
                   {b.key&&<span className="font-mono text-[11px] text-cs-dim">{b.key}</span>}
-                  <span className="font-mono text-[9px] px-2 py-0.5 rounded-sm" style={{background:b.status==="active"?"rgba(59,107,59,0.08)":"rgba(139,48,48,0.08)",border:"1px solid "+(b.status==="active"?"rgba(59,107,59,0.2)":"rgba(139,48,48,0.2)"),color:b.status==="active"?"#3B6B3B":"#8B3030"}}>{b.status==="active"?"AKTYWNY":"UKRYTY"}</span>
-                  {b.status==="sold"&&<span className="font-mono text-[9px] px-2 py-0.5 rounded-sm bg-cs-gold text-cs-deep font-bold">SPRZEDANY</span>}
+                  <span className="font-mono text-[9px] px-2 py-0.5 rounded-sm" style={{background:b.status==="active"?"rgba(59,107,59,0.08)":"rgba(139,48,48,0.08)",border:"1px solid "+(b.status==="active"?"rgba(59,107,59,0.2)":"rgba(139,48,48,0.2)"),color:b.status==="active"?"#3B6B3B":"#8B3030"}}>{b.status==="active"?"AKTYWNY":b.status==="sold"?"SPRZEDANY":"UKRYTY"}</span>
                 </div>
                 {b.tags&&<div className="font-mono text-[10px] text-cs-dim mt-1">{b.tags}</div>}
-                {b.audio_url&&<div className="font-mono text-[10px] text-cs-dim mt-0.5 truncate max-w-[400px]">Audio: {b.audio_url}</div>}
-                {!b.audio_url&&<div className="font-mono text-[10px] text-cs-red mt-0.5">Brak audio URL</div>}
+                {b.audio_url?<div className="font-mono text-[10px] text-cs-green mt-0.5">Audio OK</div>:<div className="font-mono text-[10px] text-cs-red mt-0.5">Brak audio</div>}
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
-                <div className="text-right mr-3">
-                  <div className="font-display text-xl text-cs-gold font-bold">{b.price} zl</div>
-                </div>
+                <div className="text-right mr-3"><div className="font-display text-xl text-cs-gold font-bold">{b.price} zl</div></div>
                 <button onClick={()=>toggleBeatStatus(b.id,b.status)} className="font-mono text-[10px] px-2 py-1 cursor-pointer rounded-sm transition-colors" style={{border:"1px solid #1A1F2B",color:"#706860"}}>{b.status==="active"?"Ukryj":"Pokaz"}</button>
                 <button onClick={()=>delBeat(b.id)} className="font-mono text-[10px] text-cs-red px-2 py-1 cursor-pointer rounded-sm hover:bg-[rgba(139,48,48,0.12)] transition-colors" style={{border:"1px solid rgba(139,48,48,0.15)"}}>Usun</button>
               </div>
             </div>
           </div>
         ))}</div>
+
+        <div className="bg-cs-card border border-cs-line rounded-sm p-5 mt-8">
+          <div className="font-mono text-[10px] text-cs-dim">SETUP: W Supabase Dashboard &rarr; Storage &rarr; New Bucket &rarr; nazwa: <span className="text-cs-gold">audio</span> &rarr; Public bucket: ON</div>
+        </div>
       </>}
+
 
       {/* ═══ SETTINGS ═══ */}
       {tab==="set"&&<>
