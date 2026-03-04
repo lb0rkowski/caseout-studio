@@ -19,7 +19,7 @@ export default function Nav() {
       <nav className="fixed top-0 left-0 right-0 z-[9000] transition-all duration-500" style={{ background: scrolled || open ? "rgba(5,8,16,0.94)" : "transparent", backdropFilter: scrolled ? "blur(24px) saturate(1.2)" : "none", borderBottom: scrolled ? "1px solid #1A1F2B" : "1px solid transparent" }}>
         <div className="max-w-[1400px] mx-auto flex items-center justify-between h-16 md:h-20 px-5 md:px-8">
           <Link href="/" className="flex items-center gap-2.5 no-underline z-50">
-            <img src="/logo.png" alt="CS" className="w-8 h-8 object-contain" style={{mixBlendMode:"lighten"}} />
+            <img src="/logo.png" alt="CS" className="w-8 h-8 object-contain" />
             <span className="font-display text-lg md:text-xl font-semibold text-cs-white tracking-[0.15em] uppercase">Caseout</span>
             <span className="font-mono text-[10px] text-cs-dim ml-1">STUDIO</span>
           </Link>

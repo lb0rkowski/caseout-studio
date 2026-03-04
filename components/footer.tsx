@@ -11,7 +11,7 @@ export default function Footer() {
       <MarqueeBand items={MARQUEE_SERVICES} />
       <div className="max-w-[1400px] mx-auto px-5 md:px-8 pt-16 pb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12">
         <div>
-          <div className="flex items-center gap-2 mb-5"><img src="/logo.png" alt="CS" className="w-6 h-6 object-contain" style={{mixBlendMode:"lighten"}} /><span className="font-display text-lg font-semibold text-cs-white tracking-[0.12em]">CASEOUT STUDIO</span></div>
+          <div className="flex items-center gap-2 mb-5"><img src="/logo.png" alt="CS" className="w-6 h-6 object-contain" /><span className="font-display text-lg font-semibold text-cs-white tracking-[0.12em]">CASEOUT STUDIO</span></div>
           <p className="font-body text-sm md:text-base text-cs-muted leading-relaxed">Underground z klasą.<br/>Profesjonalne studio nagraniowe w Warszawie.</p>
           <WaveVisualizer bars={30} height={30} className="mt-6" />
         </div>
