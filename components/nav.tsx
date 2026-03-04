@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const pages = [{ href: "/", label: "Home" }, { href: "/oferta", label: "Oferta" }, { href: "/portfolio", label: "Portfolio" }, { href: "/cennik", label: "Cennik" }, { href: "/kontakt", label: "Kontakt" }, { href: "/rezerwacje", label: "Rezerwacje" }];
+const pages = [{ href: "/", label: "Home" }, { href: "/oferta", label: "Oferta" }, { href: "/beaty", label: "Beaty" }, { href: "/cennik", label: "Cennik" }, { href: "/kontakt", label: "Kontakt" }, { href: "/rezerwacje", label: "Rezerwacje" }];
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);

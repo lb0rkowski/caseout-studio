@@ -44,7 +44,50 @@ export default function AdminPage(){
   const[editRate,setEditRate]=useState(HOURLY_RATE);
   const[editWeekend,setEditWeekend]=useState(WEEKEND_SURCHARGE);
   const[offerEditing,setOfferEditing]=useState(false);
+
+  // Beats state
+  const[beats,setBeats]=useState<any[]>([]);
+  const[beatsLoading,setBeatsLoading]=useState(false);
+  const[newBeat,setNewBeat]=useState({title:"",bpm:140,key:"",tags:"",price:200,audio_url:"",cover_url:""});
+  const[beatErr,setBeatErr]=useState("");
+  const[beatSaving,setBeatSaving]=useState(false);
   const[offerSaved,setOfferSaved]=useState(false);
+
+  useEffect(()=>{
+    if(auth&&tab==="beats"){
+      setBeatsLoading(true);
+      fetch("/api/beats").then(r=>r.json()).then(d=>setBeats(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setBeatsLoading(false));
+    }
+  },[auth,tab]);
+
+  const addBeat=async()=>{
+    if(!newBeat.title.trim()){setBeatErr("Podaj tytul");return;}
+    setBeatSaving(true);setBeatErr("");
+    try{
+      const res=await fetch("/api/beats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(newBeat)});
+      const data=await res.json();
+      if(!res.ok){setBeatErr(data.error||"Blad");setBeatSaving(false);return;}
+      setBeats(p=>[data,...p]);
+      setNewBeat({title:"",bpm:140,key:"",tags:"",price:200,audio_url:"",cover_url:""});
+    }catch(e:any){setBeatErr(e.message);}
+    setBeatSaving(false);
+  };
+
+  const delBeat=async(id:number)=>{
+    if(!window.confirm("Usunac ten beat?"))return;
+    try{
+      await fetch("/api/beats",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({id})});
+      setBeats(p=>p.filter(b=>b.id!==id));
+    }catch(e){}
+  };
+
+  const toggleBeatStatus=async(id:number,current:string)=>{
+    const next=current==="active"?"hidden":"active";
+    try{
+      const res=await fetch("/api/beats",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,status:next})});
+      if(res.ok){setBeats(p=>p.map(b=>b.id===id?{...b,status:next}:b));}
+    }catch(e){}
+  };
 
   if(!auth) return(
     <div className="min-h-screen flex items-center justify-center px-5">
@@ -88,7 +131,7 @@ export default function AdminPage(){
   const sortIcon=(field:string)=>sortField===field?(sortDir==="asc"?" ^":" v"):"";
   const del=async(id:number)=>{if(!window.confirm("Usunac te rezerwacje?"))return;await removeBooking(id);};
 
-  const tabs=[["dash","Dashboard"],["book","Rezerwacje"],["offer","Oferta"],["set","Ustawienia"]] as const;
+  const tabs=[["dash","Dashboard"],["book","Rezerwacje"],["beats","Beaty"],["offer","Oferta"],["set","Ustawienia"]] as const;
 
   const groupByDate=(list: typeof bookings)=>{
     const map: Record<string, typeof bookings> = {};
@@ -339,6 +382,54 @@ export default function AdminPage(){
         <div className="bg-cs-card border border-cs-line rounded-sm p-5 md:p-6">
           <div className="font-mono text-[10px] text-cs-dim">UWAGA: Zmiany w tej zakladce sa podgladem. Aby zastosowac je na stronie, zaktualizuj wartosci w pliku <span className="text-cs-gold">lib/data.ts</span> i zrob deploy na Vercel.</div>
         </div>
+      </>}
+
+      {/* ═══ BEATS ═══ */}
+      {tab==="beats"&&<>
+        <div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.2em] mb-4">DODAJ NOWY BEAT</div>
+        <div className="bg-cs-card border border-cs-line rounded-sm p-5 md:p-6 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+            <div className="col-span-2"><label className="font-mono text-[10px] text-cs-dim mb-1 block">TYTUL *</label><input value={newBeat.title} onChange={e=>setNewBeat({...newBeat,title:e.target.value})} className={inp} placeholder="Midnight Drill"/></div>
+            <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">BPM</label><input type="number" value={newBeat.bpm} onChange={e=>setNewBeat({...newBeat,bpm:Number(e.target.value)})} className={inp}/></div>
+            <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">TONACJA</label><input value={newBeat.key} onChange={e=>setNewBeat({...newBeat,key:e.target.value})} className={inp} placeholder="Cm"/></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+            <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">TAGI (po przecinku)</label><input value={newBeat.tags} onChange={e=>setNewBeat({...newBeat,tags:e.target.value})} className={inp} placeholder="drill, dark, 808"/></div>
+            <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">CENA (ZL)</label><input type="number" value={newBeat.price} onChange={e=>setNewBeat({...newBeat,price:Number(e.target.value)})} className={inp}/></div>
+            <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">URL AUDIO (mp3)</label><input value={newBeat.audio_url} onChange={e=>setNewBeat({...newBeat,audio_url:e.target.value})} className={inp} placeholder="https://...mp3"/></div>
+          </div>
+          {beatErr&&<div className="font-mono text-[11px] text-cs-red mb-3">{beatErr}</div>}
+          <button onClick={addBeat} disabled={beatSaving} className="font-mono text-[11px] px-5 py-2.5 rounded-sm cursor-pointer transition-all" style={{background:"rgba(196,151,103,0.08)",border:"1px solid rgba(196,151,103,0.25)",color:"#C49767"}}>{beatSaving?"Dodawanie...":"+ Dodaj beat"}</button>
+        </div>
+
+        <div className="font-mono text-[11px] text-cs-dim tracking-[0.15em] mb-4">WSZYSTKIE BEATY ({beats.length})</div>
+        {beatsLoading&&<div className="font-mono text-xs text-cs-dim py-8 text-center">Ladowanie...</div>}
+        {!beatsLoading&&beats.length===0&&<div className="font-body text-base text-cs-dim bg-cs-card border border-cs-line p-8 text-center rounded-sm">Brak beatow — dodaj pierwszy powyzej</div>}
+        <div className="space-y-3">{beats.map(b=>(
+          <div key={b.id} className="bg-cs-card border border-cs-line rounded-sm p-5 md:p-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-display text-lg text-cs-white">{b.title}</span>
+                  <span className="font-mono text-[11px] text-cs-gold-dim">{b.bpm} BPM</span>
+                  {b.key&&<span className="font-mono text-[11px] text-cs-dim">{b.key}</span>}
+                  <span className="font-mono text-[9px] px-2 py-0.5 rounded-sm" style={{background:b.status==="active"?"rgba(59,107,59,0.08)":"rgba(139,48,48,0.08)",border:"1px solid "+(b.status==="active"?"rgba(59,107,59,0.2)":"rgba(139,48,48,0.2)"),color:b.status==="active"?"#3B6B3B":"#8B3030"}}>{b.status==="active"?"AKTYWNY":"UKRYTY"}</span>
+                  {b.status==="sold"&&<span className="font-mono text-[9px] px-2 py-0.5 rounded-sm bg-cs-gold text-cs-deep font-bold">SPRZEDANY</span>}
+                </div>
+                {b.tags&&<div className="font-mono text-[10px] text-cs-dim mt-1">{b.tags}</div>}
+                {b.audio_url&&<div className="font-mono text-[10px] text-cs-dim mt-0.5 truncate max-w-[400px]">Audio: {b.audio_url}</div>}
+                {!b.audio_url&&<div className="font-mono text-[10px] text-cs-red mt-0.5">Brak audio URL</div>}
+              </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="text-right mr-3">
+                  <div className="font-display text-xl text-cs-gold font-bold">{b.price} zl</div>
+                </div>
+                <button onClick={()=>toggleBeatStatus(b.id,b.status)} className="font-mono text-[10px] px-2 py-1 cursor-pointer rounded-sm transition-colors" style={{border:"1px solid #1A1F2B",color:"#706860"}}>{b.status==="active"?"Ukryj":"Pokaz"}</button>
+                <button onClick={()=>delBeat(b.id)} className="font-mono text-[10px] text-cs-red px-2 py-1 cursor-pointer rounded-sm hover:bg-[rgba(139,48,48,0.12)] transition-colors" style={{border:"1px solid rgba(139,48,48,0.15)"}}>Usun</button>
+              </div>
+            </div>
+          </div>
+        ))}</div>
       </>}
 
       {/* ═══ SETTINGS ═══ */}

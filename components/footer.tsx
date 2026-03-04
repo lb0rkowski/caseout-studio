@@ -3,7 +3,7 @@ import Link from "next/link";
 import { MarqueeBand, WaveVisualizer } from "./ui";
 import { MARQUEE_SERVICES } from "@/lib/data";
 
-const links = [{ href: "/", label: "Home" }, { href: "/oferta", label: "Oferta" }, { href: "/portfolio", label: "Portfolio" }, { href: "/cennik", label: "Cennik" }, { href: "/kontakt", label: "Kontakt" }, { href: "/rezerwacje", label: "Rezerwacje" }];
+const links = [{ href: "/", label: "Home" }, { href: "/oferta", label: "Oferta" }, { href: "/beaty", label: "Beaty" }, { href: "/cennik", label: "Cennik" }, { href: "/kontakt", label: "Kontakt" }, { href: "/rezerwacje", label: "Rezerwacje" }];
 
 export default function Footer() {
   return (

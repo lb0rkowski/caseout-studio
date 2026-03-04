@@ -47,7 +47,7 @@ function GalleryImage({ item, index }: { item: typeof GALLERY[0]; index: number 
       />
 
       {/* Overlay */}
-      <div className="absolute inset-0 transition-all duration-500" style={{ background: hover ? "rgba(5,8,16,0.3)" : "rgba(5,8,16,0.55)" }} />
+      <div className="absolute inset-0 transition-all duration-500" style={{ background: hover ? "rgba(5,8,16,0.1)" : "rgba(5,8,16,0.15)" }} />
 
       {/* Label */}
       <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
@@ -104,7 +104,7 @@ export default function HomePage() {
           {/* CTA */}
           <div className="flex gap-4 justify-center mt-10 md:mt-12 flex-wrap" style={{ opacity: loaded ? 1 : 0, transition: "opacity 0.8s ease 1.2s" }}>
             <Link href="/rezerwacje"><GlowBtn>Zarezerwuj Sesję</GlowBtn></Link>
-            <Link href="/portfolio"><GlowBtn ghost>Portfolio →</GlowBtn></Link>
+            <Link href="/beaty"><GlowBtn ghost>Beaty →</GlowBtn></Link>
           </div>
         </div>
 
