@@ -1,6 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase, getAdmin } from "@/lib/db";
 
+
+async function notifyAdmin(title: string, body: string) {
+  try {
+    const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
+    if (!VAPID_PUBLIC || !VAPID_PRIVATE) return;
+
+    const webpush = await import("web-push");
+    webpush.setVapidDetails(
+      process.env.VAPID_EMAIL || "mailto:kontakt@caseoutstudio.pl",
+      VAPID_PUBLIC, VAPID_PRIVATE
+    );
+
+    const admin = getAdmin();
+    const { data: subs } = await admin.from("push_subscriptions").select("*").eq("active", true);
+    if (!subs || subs.length === 0) return;
+
+    const payload = JSON.stringify({ title, body, url: "/vault-x9k2m", tag: "booking-" + Date.now() });
+    const stale: string[] = [];
+    for (const sub of subs) {
+      try {
+        await webpush.sendNotification(JSON.parse(sub.sub_data), payload);
+      } catch (err: any) {
+        if (err.statusCode === 404 || err.statusCode === 410) stale.push(sub.endpoint);
+      }
+    }
+    if (stale.length > 0) await admin.from("push_subscriptions").delete().in("endpoint", stale);
+  } catch (e) { console.error("Push notify failed:", e); }
+}
 function genOrderNumber(): string {
   const d = new Date();
   const date = d.getFullYear().toString() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0");
@@ -80,6 +109,7 @@ export async function POST(req: NextRequest) {
         .select();
 
       if (error) throw error;
+      notifyAdmin("Nowy pakiet", name.trim() + " | Pakiet " + (package_id || "") + " (" + sessions.length + " sesji)");
       return NextResponse.json({ bookings: newBookings, order_number: orderNum }, { status: 201 });
     }
 
@@ -119,6 +149,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) throw error;
+    notifyAdmin("Nowa rezerwacja", name.trim() + " | " + date + " " + hour + ":00 (" + dur + "h)");
     return NextResponse.json({ ...newBooking, order_number: orderNum, notes: newBooking.notes || "" }, { status: 201 });
   } catch (e: any) {
     console.error("POST /api/bookings error:", e);

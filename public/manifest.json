@@ -1,0 +1,13 @@
+{
+  "name": "Caseout Studio Admin",
+  "short_name": "Caseout",
+  "description": "Caseout Studio — panel administracyjny",
+  "start_url": "/vault-x9k2m",
+  "display": "standalone",
+  "background_color": "#050810",
+  "theme_color": "#080C12",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

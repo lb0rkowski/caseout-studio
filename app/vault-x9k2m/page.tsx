@@ -4,6 +4,15 @@ import { GlowBtn } from "@/components/ui";
 import { useBookings } from "@/lib/store";
 import { SESSION_TYPES, PACKAGES, SERVICES, HOURLY_RATE, WEEKEND_SURCHARGE } from "@/lib/data";
 
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
 function makeGCalUrl(b: any) {
   const d = (b.date || "").replace(/-/g, "");
   const sh = String(b.hour).padStart(2, "0");
@@ -40,6 +49,7 @@ export default function AdminPage(){
 
   // Offer editor state
   const[editServices,setEditServices]=useState(SERVICES.map(s=>({...s})));
+  const[editSessions,setEditSessions]=useState(SESSION_TYPES.map(s=>({...s})));
   const[editPackages,setEditPackages]=useState(PACKAGES.map(p=>({...p})));
   const[editRate,setEditRate]=useState(HOURLY_RATE);
   const[editWeekend,setEditWeekend]=useState(WEEKEND_SURCHARGE);
@@ -55,6 +65,76 @@ export default function AdminPage(){
   const[uploadProgress,setUploadProgress]=useState("");
   const[dragOver,setDragOver]=useState(false);
   const[offerSaved,setOfferSaved]=useState(false);
+
+  // Push notification state
+  const[pushSupported,setPushSupported]=useState(false);
+  const[pushEnabled,setPushEnabled]=useState(false);
+  const[pushLoading,setPushLoading]=useState(false);
+  const[pushCount,setPushCount]=useState(0);
+  const[pushErr,setPushErr]=useState("");
+  const[pushTest,setPushTest]=useState("");
+
+  // Check push support & registration on mount
+  useEffect(()=>{
+    if(typeof window==="undefined")return;
+    const ok="serviceWorker"in navigator&&"PushManager"in window&&"Notification"in window;
+    setPushSupported(ok);
+    if(!ok)return;
+
+    navigator.serviceWorker.register("/sw.js").then(async(reg)=>{
+      const sub=await reg.pushManager.getSubscription();
+      setPushEnabled(!!sub);
+    }).catch(()=>{});
+
+    fetch("/api/push").then(r=>r.json()).then(d=>setPushCount(d.count||0)).catch(()=>{});
+  },[auth]);
+
+  const enablePush=async()=>{
+    setPushLoading(true);setPushErr("");
+    try{
+      const permission=await Notification.requestPermission();
+      if(permission!=="granted"){setPushErr("Brak zgody na powiadomienia. Sprawdz ustawienia przegladarki.");setPushLoading(false);return;}
+
+      const reg=await navigator.serviceWorker.ready;
+      const vapidKey=process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY||"";
+      if(!vapidKey){setPushErr("Brak VAPID key. Dodaj NEXT_PUBLIC_VAPID_PUBLIC_KEY w Vercel.");setPushLoading(false);return;}
+
+      const sub=await reg.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:urlBase64ToUint8Array(vapidKey),
+      });
+
+      const res=await fetch("/api/push",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({subscription:sub.toJSON()})});
+      if(!res.ok)throw new Error("Blad zapisu subskrypcji");
+
+      setPushEnabled(true);setPushCount(p=>p+1);
+    }catch(e:any){setPushErr(e.message||"Blad aktywacji push");}
+    setPushLoading(false);
+  };
+
+  const disablePush=async()=>{
+    setPushLoading(true);
+    try{
+      const reg=await navigator.serviceWorker.ready;
+      const sub=await reg.pushManager.getSubscription();
+      if(sub){
+        await fetch("/api/push",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({endpoint:sub.endpoint})});
+        await sub.unsubscribe();
+      }
+      setPushEnabled(false);setPushCount(p=>Math.max(0,p-1));
+    }catch(e){}
+    setPushLoading(false);
+  };
+
+  const testPush=async()=>{
+    setPushTest("Wysylanie...");
+    try{
+      const res=await fetch("/api/push/notify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:"Test powiadomienia",body:"Caseout Studio push dziala!",tag:"test"})});
+      const d=await res.json();
+      setPushTest(d.sent>0?"Wyslano do "+d.sent+" urzadzen":d.error||"Brak subskrybentow");
+    }catch(e:any){setPushTest("Blad: "+e.message);}
+    setTimeout(()=>setPushTest(""),4000);
+  };
 
   useEffect(()=>{
     if(auth&&tab==="beats"){
@@ -351,7 +431,7 @@ export default function AdminPage(){
           {!offerEditing?<button onClick={()=>setOfferEditing(true)} className="font-mono text-[10px] text-cs-gold-dim hover:text-cs-gold cursor-pointer bg-transparent border border-cs-line px-3 py-1.5 rounded-sm transition-colors">EDYTUJ WSZYSTKO</button>
           :<div className="flex gap-2">
             <button onClick={saveOffer} className="font-mono text-[10px] text-cs-green cursor-pointer bg-transparent border border-[rgba(59,107,59,0.3)] px-3 py-1.5 rounded-sm transition-colors hover:border-cs-green">ZAPISZ</button>
-            <button onClick={()=>{setOfferEditing(false);setEditServices(SERVICES.map(s=>({...s})));setEditPackages(PACKAGES.map(p=>({...p})));setEditRate(HOURLY_RATE);setEditWeekend(WEEKEND_SURCHARGE);}} className="font-mono text-[10px] text-cs-dim cursor-pointer bg-transparent border border-cs-line px-3 py-1.5 rounded-sm transition-colors">ANULUJ</button>
+            <button onClick={()=>{setOfferEditing(false);setEditServices(SERVICES.map(s=>({...s})));setEditSessions(SESSION_TYPES.map(s=>({...s})));setEditPackages(PACKAGES.map(p=>({...p})));setEditRate(HOURLY_RATE);setEditWeekend(WEEKEND_SURCHARGE);}} className="font-mono text-[10px] text-cs-dim cursor-pointer bg-transparent border border-cs-line px-3 py-1.5 rounded-sm transition-colors">ANULUJ</button>
           </div>}
         </div>
         {offerSaved&&<div className="font-mono text-xs text-cs-green mb-4 p-2 rounded-sm" style={{background:"rgba(59,107,59,0.06)",border:"1px solid rgba(59,107,59,0.15)"}}>Zapisano zmiany (aby zastosowac na stronie, zaktualizuj plik data.ts i zrob deploy)</div>}
@@ -396,6 +476,27 @@ export default function AdminPage(){
                 <span className="font-mono text-[11px] text-cs-dim">zl</span>
                 <span className="font-mono text-[10px] text-cs-dim ml-2">({Math.round(p.price/p.hours)} zl/h)</span>
               </div>
+            </div>}
+          </div>
+        ))}</div>
+
+        {/* Typy sesji */}
+        <div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.2em] mb-3">TYPY SESJI (REZERWACJE)</div>
+        <div className="space-y-3 mb-8">{editSessions.map((s,i)=>(
+          <div key={i} className="bg-cs-card border border-cs-line rounded-sm p-5 md:p-6">
+            {offerEditing?<div className="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
+              <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">ID</label><input value={s.id} onChange={e=>{const n=[...editSessions];n[i]={...n[i],id:e.target.value};setEditSessions(n);}} className={inp}/></div>
+              <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">NAZWA</label><input value={s.name} onChange={e=>{const n=[...editSessions];n[i]={...n[i],name:e.target.value};setEditSessions(n);}} className={inp}/></div>
+              <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">IKONA (emoji)</label><input value={s.icon} onChange={e=>{const n=[...editSessions];n[i]={...n[i],icon:e.target.value};setEditSessions(n);}} className={inp}/></div>
+              <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">KOLOR (hex)</label><input value={s.color} onChange={e=>{const n=[...editSessions];n[i]={...n[i],color:e.target.value};setEditSessions(n);}} className={inp}/></div>
+            </div>
+            :<div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">{s.icon}</span>
+                <span className="font-display text-base text-cs-white">{s.name}</span>
+                <span className="font-mono text-[10px] text-cs-dim">{s.id}</span>
+              </div>
+              <div className="w-4 h-4 rounded-full" style={{background:s.color}}/>
             </div>}
           </div>
         ))}</div>
@@ -531,6 +632,40 @@ export default function AdminPage(){
             </div>
           ))}
         </div>
+        <div className="font-mono text-[11px] text-cs-dim tracking-[0.15em] mb-4 mt-10">POWIADOMIENIA PUSH</div>
+        <div className="bg-cs-card border border-cs-line rounded-sm p-5 md:p-8 mb-10">
+          {!pushSupported?(
+            <div className="font-body text-sm text-cs-red">Twoja przegladarka nie wspiera powiadomien push. Na iOS: dodaj strone na ekran glowny (Udostepnij &rarr; Dodaj do ekranu poczatkowego) i otworz z niego.</div>
+          ):(
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <div className="font-display text-base text-cs-white mb-1">
+                    {pushEnabled?<span className="text-cs-green">&#9679; Powiadomienia aktywne</span>:<span className="text-cs-dim">&#9675; Powiadomienia wylaczone</span>}
+                  </div>
+                  <div className="font-mono text-[11px] text-cs-dim">
+                    {pushCount>0?pushCount+" urzadzen subskrybuje":"Brak subskrybentow"}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {!pushEnabled?(
+                    <button onClick={enablePush} disabled={pushLoading} className="font-mono text-[11px] px-5 py-2.5 rounded-sm cursor-pointer transition-all" style={{background:"rgba(59,107,59,0.08)",border:"1px solid rgba(59,107,59,0.25)",color:"#3B6B3B"}}>{pushLoading?"Aktywacja...":"Wlacz powiadomienia"}</button>
+                  ):(
+                    <button onClick={disablePush} disabled={pushLoading} className="font-mono text-[11px] px-5 py-2.5 rounded-sm cursor-pointer transition-all" style={{background:"transparent",border:"1px solid #1A1F2B",color:"#706860"}}>{pushLoading?"...":"Wylacz"}</button>
+                  )}
+                  {pushEnabled&&<button onClick={testPush} className="font-mono text-[11px] px-4 py-2.5 rounded-sm cursor-pointer transition-all" style={{background:"rgba(196,151,103,0.08)",border:"1px solid rgba(196,151,103,0.2)",color:"#C49767"}}>Test</button>}
+                </div>
+              </div>
+              {pushErr&&<div className="font-mono text-[11px] text-cs-red p-3 rounded-sm" style={{background:"rgba(139,48,48,0.06)",border:"1px solid rgba(139,48,48,0.15)"}}>{pushErr}</div>}
+              {pushTest&&<div className="font-mono text-[11px] text-cs-gold p-3 rounded-sm" style={{background:"rgba(196,151,103,0.04)",border:"1px solid rgba(196,151,103,0.1)"}}>{pushTest}</div>}
+              <div className="font-mono text-[10px] text-cs-dim space-y-1">
+                <div>Powiadomienia wysylane automatycznie przy nowej rezerwacji.</div>
+                <div>iOS: Dodaj strone na ekran glowny &rarr; otworz z ikony &rarr; wlacz push tutaj.</div>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="font-mono text-[11px] text-cs-dim tracking-[0.15em] mb-4">INFORMACJE</div>
         <div className="bg-cs-card border border-cs-line p-5 md:p-8 rounded-sm space-y-3">
           <div className="flex justify-between"><span className="font-body text-base text-cs-muted">Wersja</span><span className="font-mono text-sm text-cs-gold">2.0.0</span></div>
