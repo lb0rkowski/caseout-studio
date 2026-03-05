@@ -65,6 +65,11 @@ export default function AdminPage(){
   const[uploadProgress,setUploadProgress]=useState("");
   const[dragOver,setDragOver]=useState(false);
   const[offerSaved,setOfferSaved]=useState(false);
+  const[beatSort,setBeatSort]=useState<"newest"|"price"|"bpm"|"title">("newest");
+  const[beatFilter,setBeatFilter]=useState<"all"|"active"|"sold"|"hidden">("all");
+  const[sellingBeatId,setSellingBeatId]=useState<number|null>(null);
+  const[buyerName,setBuyerName]=useState("");
+  const[buyerEmail,setBuyerEmail]=useState("");
 
   // Push notification state
   const[pushSupported,setPushSupported]=useState(false);
@@ -222,6 +227,40 @@ export default function AdminPage(){
       if(res.ok){setBeats(p=>p.map(b=>b.id===id?{...b,status:next}:b));}
     }catch(e){}
   };
+
+  const markAsSold=async(id:number)=>{
+    if(!buyerName.trim()||!buyerEmail.trim()){setBeatErr("Podaj dane kupujacego");return;}
+    try{
+      const orderNum="BT-"+Date.now().toString(36).toUpperCase();
+      const res=await fetch("/api/beats",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,status:"sold",buyer_name:buyerName.trim(),buyer_email:buyerEmail.trim(),sold_at:new Date().toISOString(),order_number:orderNum})});
+      if(res.ok){
+        setBeats(p=>p.map(b=>b.id===id?{...b,status:"sold",buyer_name:buyerName.trim(),buyer_email:buyerEmail.trim(),sold_at:new Date().toISOString(),order_number:orderNum}:b));
+        setSellingBeatId(null);setBuyerName("");setBuyerEmail("");setBeatErr("");
+      }
+    }catch(e){}
+  };
+
+  const unmarkSold=async(id:number)=>{
+    if(!window.confirm("Cofnac sprzedaz tego beatu?"))return;
+    try{
+      const res=await fetch("/api/beats",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,status:"active",buyer_name:"",buyer_email:"",sold_at:null,order_number:""})});
+      if(res.ok){setBeats(p=>p.map(b=>b.id===id?{...b,status:"active",buyer_name:"",buyer_email:"",sold_at:null,order_number:""}:b));}
+    }catch(e){}
+  };
+
+  // Sorted + filtered beats
+  const filteredBeats=beats.filter(b=>beatFilter==="all"||b.status===beatFilter);
+  const sortedBeats=[...filteredBeats].sort((a,b)=>{
+    switch(beatSort){
+      case"price":return a.price-b.price;
+      case"bpm":return a.bpm-b.bpm;
+      case"title":return a.title.localeCompare(b.title);
+      default:return b.id-a.id;
+    }
+  });
+  const activeBeats=beats.filter(b=>b.status==="active");
+  const soldBeats=beats.filter(b=>b.status==="sold");
+  const hiddenBeats=beats.filter(b=>b.status==="hidden");
 
   if(!auth) return(
     <div className="min-h-screen flex items-center justify-center px-5">
@@ -587,35 +626,79 @@ export default function AdminPage(){
           {beatErr&&<div className="font-mono text-[11px] text-cs-red mt-2">{beatErr}</div>}
         </div>
 
-        <div className="font-mono text-[11px] text-cs-dim tracking-[0.15em] mb-4">WSZYSTKIE BEATY ({beats.length})</div>
+        {/* Sort + filter bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="font-mono text-[11px] text-cs-dim tracking-[0.15em]">BEATY ({beats.length})</div>
+            <div className="flex gap-1">{(["all","active","sold","hidden"] as const).map(f=><button key={f} onClick={()=>setBeatFilter(f)} className="font-mono text-[9px] px-2.5 py-1 rounded-sm cursor-pointer transition-all" style={{background:beatFilter===f?"rgba(196,151,103,0.08)":"transparent",border:"1px solid "+(beatFilter===f?"rgba(196,151,103,0.2)":"#1A1F2B"),color:beatFilter===f?"#C49767":"#706860"}}>{f==="all"?"Wszystkie ("+beats.length+")":f==="active"?"Aktywne ("+activeBeats.length+")":f==="sold"?"Sprzedane ("+soldBeats.length+")":"Ukryte ("+hiddenBeats.length+")"}</button>)}</div>
+          </div>
+          <div className="flex gap-1">{(["newest","title","price","bpm"] as const).map(s=><button key={s} onClick={()=>setBeatSort(s)} className="font-mono text-[9px] px-2.5 py-1 rounded-sm cursor-pointer transition-all" style={{background:beatSort===s?"rgba(196,151,103,0.08)":"transparent",border:"1px solid "+(beatSort===s?"rgba(196,151,103,0.2)":"#1A1F2B"),color:beatSort===s?"#C49767":"#706860"}}>{s==="newest"?"Najnowsze":s==="title"?"A-Z":s==="price"?"Cena":"BPM"}</button>)}</div>
+        </div>
+
         {beatsLoading&&<div className="font-mono text-xs text-cs-dim py-8 text-center">Ladowanie...</div>}
-        {!beatsLoading&&beats.length===0&&<div className="font-body text-base text-cs-dim bg-cs-card border border-cs-line p-8 text-center rounded-sm">Brak beatow — dodaj pierwszy powyzej</div>}
-        <div className="space-y-3">{beats.map(b=>(
-          <div key={b.id} className="bg-cs-card border border-cs-line rounded-sm p-5 md:p-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-display text-lg text-cs-white">{b.title}</span>
-                  <span className="font-mono text-[11px] text-cs-gold-dim">{b.bpm} BPM</span>
-                  {b.key&&<span className="font-mono text-[11px] text-cs-dim">{b.key}</span>}
-                  <span className="font-mono text-[9px] px-2 py-0.5 rounded-sm" style={{background:b.status==="active"?"rgba(59,107,59,0.08)":"rgba(139,48,48,0.08)",border:"1px solid "+(b.status==="active"?"rgba(59,107,59,0.2)":"rgba(139,48,48,0.2)"),color:b.status==="active"?"#3B6B3B":"#8B3030"}}>{b.status==="active"?"AKTYWNY":b.status==="sold"?"SPRZEDANY":"UKRYTY"}</span>
+        {!beatsLoading&&sortedBeats.length===0&&<div className="font-body text-base text-cs-dim bg-cs-card border border-cs-line p-8 text-center rounded-sm">{beats.length===0?"Brak beatow — dodaj pierwszy powyzej":"Brak beatow w tej kategorii"}</div>}
+        <div className="space-y-3">{sortedBeats.map(b=>(
+          <div key={b.id} className="bg-cs-card border rounded-sm overflow-hidden" style={{borderColor:b.status==="sold"?"rgba(100,180,255,0.15)":"#1A1F2B"}}>
+            {b.status==="sold"&&<div className="h-0.5" style={{background:"linear-gradient(90deg, transparent, #64B4FF, transparent)"}}/>}
+            <div className="p-5 md:p-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-display text-lg text-cs-white">{b.title}</span>
+                    <span className="font-mono text-[11px] text-cs-gold-dim">{b.bpm} BPM</span>
+                    {b.key&&<span className="font-mono text-[11px] text-cs-dim">{b.key}</span>}
+                    <span className="font-mono text-[9px] px-2 py-0.5 rounded-sm" style={{background:b.status==="active"?"rgba(59,107,59,0.08)":b.status==="sold"?"rgba(100,180,255,0.08)":"rgba(139,48,48,0.08)",border:"1px solid "+(b.status==="active"?"rgba(59,107,59,0.2)":b.status==="sold"?"rgba(100,180,255,0.2)":"rgba(139,48,48,0.2)"),color:b.status==="active"?"#3B6B3B":b.status==="sold"?"#64B4FF":"#8B3030"}}>{b.status==="active"?"AKTYWNY":b.status==="sold"?"SPRZEDANY":"UKRYTY"}</span>
+                  </div>
+                  {b.tags&&<div className="font-mono text-[10px] text-cs-dim mt-1">{b.tags}</div>}
+                  {b.audio_url?<div className="font-mono text-[10px] text-cs-green mt-0.5">Audio OK</div>:<div className="font-mono text-[10px] text-cs-red mt-0.5">Brak audio</div>}
+                  {/* Sold info */}
+                  {b.status==="sold"&&<div className="mt-2 p-3 rounded-sm" style={{background:"rgba(100,180,255,0.04)",border:"1px solid rgba(100,180,255,0.1)"}}>
+                    <div className="font-mono text-[10px] tracking-[0.1em] mb-1" style={{color:"#64B4FF"}}>KUPUJACY</div>
+                    <div className="font-body text-sm text-cs-text">{b.buyer_name||"—"}</div>
+                    <div className="font-mono text-[10px] text-cs-dim">{b.buyer_email||"—"}</div>
+                    {b.order_number&&<div className="font-mono text-[10px] text-cs-gold-dim mt-1">Nr: {b.order_number}</div>}
+                    {b.sold_at&&<div className="font-mono text-[10px] text-cs-dim">Data: {new Date(b.sold_at).toLocaleDateString("pl-PL")}</div>}
+                  </div>}
                 </div>
-                {b.tags&&<div className="font-mono text-[10px] text-cs-dim mt-1">{b.tags}</div>}
-                {b.audio_url?<div className="font-mono text-[10px] text-cs-green mt-0.5">Audio OK</div>:<div className="font-mono text-[10px] text-cs-red mt-0.5">Brak audio</div>}
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <div className="font-display text-xl text-cs-gold font-bold">{b.price} zl</div>
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                    {b.status==="active"&&<button onClick={()=>{setSellingBeatId(b.id);setBuyerName("");setBuyerEmail("");setBeatErr("");}} className="font-mono text-[10px] px-2 py-1 cursor-pointer rounded-sm transition-colors" style={{border:"1px solid rgba(100,180,255,0.2)",color:"#64B4FF"}}>Sprzedaj</button>}
+                    {b.status==="sold"&&<button onClick={()=>unmarkSold(b.id)} className="font-mono text-[10px] px-2 py-1 cursor-pointer rounded-sm transition-colors" style={{border:"1px solid rgba(100,180,255,0.2)",color:"#64B4FF"}}>Cofnij</button>}
+                    {b.status!=="sold"&&<button onClick={()=>toggleBeatStatus(b.id,b.status)} className="font-mono text-[10px] px-2 py-1 cursor-pointer rounded-sm transition-colors" style={{border:"1px solid #1A1F2B",color:"#706860"}}>{b.status==="active"?"Ukryj":"Pokaz"}</button>}
+                    <button onClick={()=>delBeat(b.id)} className="font-mono text-[10px] text-cs-red px-2 py-1 cursor-pointer rounded-sm" style={{border:"1px solid rgba(139,48,48,0.15)"}}>Usun</button>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
-                <div className="text-right mr-3"><div className="font-display text-xl text-cs-gold font-bold">{b.price} zl</div></div>
-                <button onClick={()=>toggleBeatStatus(b.id,b.status)} className="font-mono text-[10px] px-2 py-1 cursor-pointer rounded-sm transition-colors" style={{border:"1px solid #1A1F2B",color:"#706860"}}>{b.status==="active"?"Ukryj":"Pokaz"}</button>
-                <button onClick={()=>delBeat(b.id)} className="font-mono text-[10px] text-cs-red px-2 py-1 cursor-pointer rounded-sm hover:bg-[rgba(139,48,48,0.12)] transition-colors" style={{border:"1px solid rgba(139,48,48,0.15)"}}>Usun</button>
-              </div>
+              {/* Sell form */}
+              {sellingBeatId===b.id&&<div className="mt-4 p-4 rounded-sm" style={{background:"rgba(100,180,255,0.04)",border:"1px solid rgba(100,180,255,0.15)"}}>
+                <div className="font-mono text-[10px] tracking-[0.15em] mb-3" style={{color:"#64B4FF"}}>OZNACZ JAKO SPRZEDANY</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                  <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">KUPUJACY *</label><input value={buyerName} onChange={e=>setBuyerName(e.target.value)} className={inp} placeholder="Jan Kowalski"/></div>
+                  <div><label className="font-mono text-[10px] text-cs-dim mb-1 block">EMAIL *</label><input value={buyerEmail} onChange={e=>setBuyerEmail(e.target.value)} className={inp} placeholder="email@domena.pl"/></div>
+                </div>
+                {beatErr&&<div className="font-mono text-[11px] text-cs-red mb-2">{beatErr}</div>}
+                <div className="flex gap-2"><button onClick={()=>markAsSold(b.id)} className="font-mono text-[10px] px-4 py-2 rounded-sm cursor-pointer transition-all" style={{background:"rgba(100,180,255,0.08)",border:"1px solid rgba(100,180,255,0.25)",color:"#64B4FF"}}>Potwierdz sprzedaz</button><button onClick={()=>{setSellingBeatId(null);setBeatErr("");}} className="font-mono text-[10px] px-4 py-2 rounded-sm cursor-pointer" style={{border:"1px solid #1A1F2B",color:"#706860"}}>Anuluj</button></div>
+              </div>}
             </div>
           </div>
         ))}</div>
 
-        <div className="bg-cs-card border border-cs-line rounded-sm p-5 mt-8">
+        {/* Stats */}
+        {beats.length>0&&<div className="grid grid-cols-3 gap-3 mt-6">{[
+          {l:"AKTYWNE",v:activeBeats.length,c:"#3B6B3B"},
+          {l:"SPRZEDANE",v:soldBeats.length,c:"#64B4FF"},
+          {l:"UKRYTE",v:hiddenBeats.length,c:"#706860"},
+        ].map((s,i)=><div key={i} className="bg-cs-card border border-cs-line p-4 rounded-sm text-center">
+          <div className="font-mono text-[9px] text-cs-dim tracking-[0.1em] mb-1">{s.l}</div>
+          <div className="font-display text-2xl" style={{color:s.c}}>{s.v}</div>
+        </div>)}</div>}
+
+        <div className="bg-cs-card border border-cs-line rounded-sm p-5 mt-6">
           <div className="font-mono text-[10px] text-cs-dim">SETUP: W Supabase Dashboard &rarr; Storage &rarr; New Bucket &rarr; nazwa: <span className="text-cs-gold">audio</span> &rarr; Public bucket: ON</div>
         </div>
       </>}
+
 
 
       {/* ═══ SETTINGS ═══ */}
