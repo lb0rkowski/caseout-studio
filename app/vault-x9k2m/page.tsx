@@ -173,16 +173,25 @@ export default function AdminPage(){
 
     let audioUrl=newBeat.audio_url;
 
-    // Upload file if present
+    // Upload file directly to Supabase Storage via signed URL
     if(uploadFile){
-      setUploadProgress("Przesylanie pliku...");
+      setUploadProgress("Przygotowanie uploadu...");
       try{
-        const fd=new FormData();
-        fd.append("file",uploadFile);
-        const upRes=await fetch("/api/upload",{method:"POST",body:fd});
+        // 1. Get signed URL from API
+        const upRes=await fetch("/api/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({filename:uploadFile.name,contentType:uploadFile.type})});
         const upData=await upRes.json();
         if(!upRes.ok){setBeatErr(upData.error||"Blad uploadu");setBeatSaving(false);setUploadProgress("");return;}
-        audioUrl=upData.url;
+
+        // 2. Upload directly to Supabase Storage (no Vercel size limit)
+        setUploadProgress("Przesylanie pliku ("+((uploadFile.size/1024/1024).toFixed(1))+" MB)...");
+        const storageRes=await fetch(upData.signedUrl,{
+          method:"PUT",
+          headers:{"Content-Type":uploadFile.type||"audio/mpeg"},
+          body:uploadFile,
+        });
+        if(!storageRes.ok){setBeatErr("Blad przesylania do storage");setBeatSaving(false);setUploadProgress("");return;}
+
+        audioUrl=upData.publicUrl;
         setUploadProgress("");
       }catch(e:any){setBeatErr("Blad uploadu: "+e.message);setBeatSaving(false);setUploadProgress("");return;}
     }
@@ -559,7 +568,7 @@ export default function AdminPage(){
                 <div className="text-4xl mb-3" style={{opacity:0.3}}>&#127925;</div>
                 <div className="font-display text-base text-cs-muted mb-1">Przeciagnij plik audio tutaj</div>
                 <div className="font-mono text-[11px] text-cs-dim">lub kliknij zeby wybrac z dysku</div>
-                <div className="font-mono text-[10px] text-cs-dim mt-2">MP3, WAV, OGG, M4A, FLAC &middot; max 50MB</div>
+                <div className="font-mono text-[10px] text-cs-dim mt-2">MP3, WAV, OGG, M4A, FLAC &middot; max 10MB</div>
               </div>
             )}
             {uploadProgress&&<div className="font-mono text-[11px] text-cs-gold mt-3">{uploadProgress}</div>}
