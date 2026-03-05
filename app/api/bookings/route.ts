@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
         .select();
 
       if (error) throw error;
-      notifyAdmin("Nowy pakiet", name.trim() + " | Pakiet " + (package_id || "") + " (" + sessions.length + " sesji)");
+      await notifyAdmin("Nowy pakiet", name.trim() + " | Pakiet " + (package_id || "") + " (" + sessions.length + " sesji)");
       return NextResponse.json({ bookings: newBookings, order_number: orderNum }, { status: 201 });
     }
 
@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) throw error;
-    notifyAdmin("Nowa rezerwacja", name.trim() + " | " + date + " " + hour + ":00 (" + dur + "h)");
+    await notifyAdmin("Nowa rezerwacja", name.trim() + " | " + date + " " + hour + ":00 (" + dur + "h)");
     return NextResponse.json({ ...newBooking, order_number: orderNum, notes: newBooking.notes || "" }, { status: 201 });
   } catch (e: any) {
     console.error("POST /api/bookings error:", e);
