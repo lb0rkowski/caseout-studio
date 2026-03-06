@@ -11,9 +11,9 @@ export default function ClientShell({ children }: { children: React.ReactNode })
   return (
     <>
       <div className="grain" /><div className="scanlines" /><Particles />
-      <div className="relative z-[1]">
+      <div className="relative z-[1] overflow-x-hidden">
         {!isAdmin && <Nav />}
-        <main className="page-enter">{children}</main>
+        <main className="page-enter overflow-x-hidden">{children}</main>
         {!isAdmin && <Footer />}
       </div>
       <Link href="/vault-x9k2m" className="fixed bottom-0 right-0 w-4 h-4 z-[9999] opacity-0" />

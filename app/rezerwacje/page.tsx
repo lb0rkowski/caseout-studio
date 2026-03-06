@@ -173,9 +173,9 @@ export default function RezerwacjePage(){
         const pr=await fetch("/api/pay",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount:price,description:"Caseout Studio "+selDate+" "+startH+":00",email:formEmail,name:formName,phone:formPhone})});
         const pd=await pr.json();
         if(pd.redirectUrl){window.location.href=pd.redirectUrl;return;}
-        setPayBusy(false);setErr(pd.error||"PayU jest niedostepne. Sprobuj ponownie lub wybierz platnosc na miejscu.");
+        setPayBusy(false);setErr(pd.error||"Przelewy24 niedostepne. Sprobuj ponownie lub wybierz platnosc na miejscu.");
         return;
-      }catch(e){setPayBusy(false);setErr("PayU jest niedostepne. Sprobuj ponownie lub wybierz platnosc na miejscu.");return;}
+      }catch(e){setPayBusy(false);setErr("Przelewy24 niedostepne. Sprobuj ponownie lub wybierz platnosc na miejscu.");return;}
     }
 
     setBusy(true);setErr("");
@@ -198,9 +198,9 @@ export default function RezerwacjePage(){
         const pr=await fetch("/api/pay",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount:pkg.price,description:"Caseout Studio Pakiet "+pkg.name,email:formEmail,name:formName,phone:formPhone})});
         const pd=await pr.json();
         if(pd.redirectUrl){window.location.href=pd.redirectUrl;return;}
-        setPayBusy(false);setErr(pd.error||"PayU jest niedostepne. Sprobuj ponownie lub wybierz platnosc na miejscu.");
+        setPayBusy(false);setErr(pd.error||"Przelewy24 niedostepne. Sprobuj ponownie lub wybierz platnosc na miejscu.");
         return;
-      }catch(e){setPayBusy(false);setErr("PayU jest niedostepne. Sprobuj ponownie lub wybierz platnosc na miejscu.");return;}
+      }catch(e){setPayBusy(false);setErr("Przelewy24 niedostepne. Sprobuj ponownie lub wybierz platnosc na miejscu.");return;}
     }
 
     setBusy(true);setErr("");
@@ -234,7 +234,7 @@ export default function RezerwacjePage(){
   // ─── INLINE PAY BUTTONS ───
   const payBtnsJsx=(onPay:(m:"payu"|"onsite")=>void)=><div className="mt-6 space-y-3">
     <div className="font-mono text-[11px] text-cs-dim tracking-[0.15em] mb-2">METODA PLATNOSCI</div>
-    <button onClick={()=>onPay("payu")} disabled={busy||payBusy} className="w-full p-4 rounded-sm font-mono text-sm transition-all cursor-pointer" style={{background:"rgba(196,151,103,0.08)",border:"1px solid rgba(196,151,103,0.25)",color:"#C49767"}}>{payBusy?"Przekierowanie do PayU...":"Zaplac online (PayU)"}</button>
+    <button onClick={()=>onPay("payu")} disabled={busy||payBusy} className="w-full p-4 rounded-sm font-mono text-sm transition-all cursor-pointer" style={{background:"rgba(196,151,103,0.08)",border:"1px solid rgba(196,151,103,0.25)",color:"#C49767"}}>{payBusy?"Przekierowanie do Przelewy24...":"Zaplac online (Przelewy24)"}</button>
     <button onClick={()=>onPay("onsite")} disabled={busy} className="w-full p-4 rounded-sm font-mono text-sm transition-all cursor-pointer" style={{background:"transparent",border:"1px solid #1A1F2B",color:"#706860"}}>{busy?"Zapisywanie...":"Zaplac na miejscu"}</button>
   </div>;
 

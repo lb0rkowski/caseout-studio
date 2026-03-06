@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /vault-x9k2m
+Disallow: /api/
+
+Sitemap: https://caseoutstudio.pl/sitemap.xml

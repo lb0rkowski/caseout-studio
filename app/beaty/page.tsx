@@ -194,7 +194,7 @@ export default function BeatyPage() {
         {!loading && beats.length > 0 && (
           <div className="mt-12 text-center">
             <div className="font-mono text-[11px] text-cs-dim tracking-[0.15em] mb-2">PLATNOSC</div>
-            <div className="font-body text-sm text-cs-muted">Platnosc online przez PayU (BLIK, karta, przelew)</div>
+            <div className="font-body text-sm text-cs-muted">Platnosc online przez Przelewy24 (BLIK, karta, przelew)</div>
             <div className="font-mono text-[10px] text-cs-dim mt-4">Po zakupie otrzymasz pliki WAV + MP3 + stems na email</div>
           </div>
         )}

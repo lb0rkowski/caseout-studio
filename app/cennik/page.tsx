@@ -60,18 +60,18 @@ export default function CennikPage() {
           const saved = (HOURLY_RATE * hoursNum) - priceNum;
           return (
             <RevealDiv key={i} delay={i * 80}>
-              <div className="bg-cs-card border border-cs-line rounded-sm p-7 md:p-9 relative overflow-hidden">
+              <div className="bg-cs-card border border-cs-line rounded-sm p-7 md:p-9 relative overflow-hidden text-center">
                 {i === 2 && <div className="absolute -top-px left-1/2 -translate-x-1/2 font-mono text-[9px] text-cs-deep bg-cs-gold px-4 py-1 tracking-[0.2em] font-bold">BEST VALUE</div>}
-                <div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.15em] mb-2">{p.hours}H STUDIO TIME</div>
-                <h3 className="font-display text-xl md:text-2xl text-cs-white uppercase mb-4">{p.name}</h3>
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="font-display text-3xl md:text-4xl text-cs-gold font-bold">{priceNum}</span>
-                  <span className="font-mono text-sm text-cs-dim">zl</span>
+                <div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.15em] mb-2">{p.hours}h studio</div>
+                <h3 className="font-display text-2xl md:text-3xl text-cs-white uppercase mb-5">{p.name}</h3>
+                <div className="flex items-baseline justify-center gap-1 mb-2">
+                  <span className="font-display text-4xl md:text-5xl text-cs-gold font-bold">{priceNum}</span>
+                  <span className="font-mono text-base text-cs-gold-dim">zl</span>
                 </div>
-                <div className="font-mono text-[11px] text-cs-gold-dim mb-1">{perHour} zl/h</div>
-                <div className="font-mono text-[11px] text-cs-green mb-4">Oszczedzasz {saved} zl</div>
-                <p className="font-body text-sm md:text-base text-cs-dim">{p.desc}</p>
-                <Link href={"/rezerwacje?package="+p.id} className="inline-block w-full mt-6"><GlowBtn ghost className="w-full">Wybierz pakiet</GlowBtn></Link>
+                <div className="font-mono text-[11px] text-cs-gold-dim mb-1">{perHour} zl / h</div>
+                <div className="font-mono text-[11px] text-cs-green mb-5">Oszczedzasz {saved} zl</div>
+                <p className="font-body text-sm md:text-base text-cs-dim mb-6">{p.desc}</p>
+                <Link href={"/rezerwacje?package="+p.id}><GlowBtn ghost className="w-full">Wybierz &rarr;</GlowBtn></Link>
               </div>
             </RevealDiv>
           );
@@ -82,7 +82,7 @@ export default function CennikPage() {
       <Sect>
         <div className="bg-cs-card border border-cs-line rounded-sm p-8 md:p-12 text-center max-w-[700px] mx-auto">
           <div className="font-mono text-[11px] text-cs-gold-dim tracking-[0.2em] mb-3">PLATNOSCI</div>
-          <p className="font-body text-base md:text-lg text-cs-muted">Platnosc online przez PayU (BLIK, karta, przelew). Mozliwosc platnosci na miejscu gotowka lub karta.</p>
+          <p className="font-body text-base md:text-lg text-cs-muted">Platnosc online przez Przelewy24 (BLIK, karta, przelew). Mozliwosc platnosci na miejscu gotowka lub karta.</p>
         </div>
       </Sect>
     </div>

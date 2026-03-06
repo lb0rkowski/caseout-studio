@@ -1,91 +1,76 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PAYU_BASE = process.env.PAYU_SANDBOX === "true"
-  ? "https://secure.snd.payu.com"
-  : "https://secure.payu.com";
+const P24_BASE = process.env.P24_SANDBOX === "true"
+  ? "https://sandbox.przelewy24.pl"
+  : "https://secure.przelewy24.pl";
 
-async function getToken(): Promise<string> {
-  const res = await fetch(PAYU_BASE + "/pl/standard/user/oauth/authorize", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "client_credentials",
-      client_id: process.env.PAYU_CLIENT_ID || "",
-      client_secret: process.env.PAYU_CLIENT_SECRET || "",
-    }),
-  });
-  const data = await res.json();
-  return data.access_token;
+function sha384(data: string): string {
+  const crypto = require("crypto");
+  return crypto.createHash("sha384").update(data, "utf8").digest("hex");
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { bookingId, amount, description, email, name, phone } = body;
+    const { amount, description, email, name, phone, bookingId } = await req.json();
 
-    if (!amount || !email || !description) {
-      return NextResponse.json({ error: "Brakuje danych" }, { status: 400 });
+    const merchantId = process.env.P24_MERCHANT_ID;
+    const posId = process.env.P24_POS_ID || merchantId;
+    const apiKey = process.env.P24_API_KEY;
+    const crc = process.env.P24_CRC;
+
+    if (!merchantId || !apiKey || !crc) {
+      return NextResponse.json({ error: "Przelewy24 nie skonfigurowane" }, { status: 500 });
     }
 
-    const posId = process.env.PAYU_POS_ID;
-    if (!posId || !process.env.PAYU_CLIENT_ID) {
-      return NextResponse.json({ error: "PayU nie skonfigurowane" }, { status: 500 });
-    }
+    const host = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? "https://" + process.env.VERCEL_URL : "http://localhost:3000");
+    const sessionId = "CS-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6);
+    const amountGr = Math.round(amount * 100); // Przelewy24 uses grosze
 
-    const token = await getToken();
-    const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/[^/]*$/, "") || "https://caseout-studio.vercel.app";
+    // Sign: SHA384(sessionId|merchantId|amount|currency|crc)
+    const sign = sha384(`{"sessionId":"${sessionId}","merchantId":${merchantId},"amount":${amountGr},"currency":"PLN","crc":"${crc}"}`);
+
+    const auth = Buffer.from(`${posId}:${apiKey}`).toString("base64");
 
     const orderData = {
-      notifyUrl: origin + "/api/pay/notify",
-      continueUrl: origin + "/rezerwacje?payment=success",
-      customerIp: req.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1",
-      merchantPosId: posId,
-      description: description,
-      currencyCode: "PLN",
-      totalAmount: String(Math.round(amount * 100)),
-      buyer: {
-        email: email,
-        firstName: name?.split(" ")[0] || "Klient",
-        lastName: name?.split(" ").slice(1).join(" ") || "",
-        phone: phone || "",
-      },
-      products: [
-        {
-          name: description,
-          unitPrice: String(Math.round(amount * 100)),
-          quantity: "1",
-        },
-      ],
+      merchantId: Number(merchantId),
+      posId: Number(posId),
+      sessionId,
+      amount: amountGr,
+      currency: "PLN",
+      description: description || "Caseout Studio",
+      email: email || "",
+      client: name || "",
+      phone: phone || "",
+      country: "PL",
+      language: "pl",
+      urlReturn: host + "/rezerwacje?payment=success",
+      urlStatus: host + "/api/pay/notify",
+      sign,
     };
 
-    const res = await fetch(PAYU_BASE + "/api/v2_1/orders", {
+    const res = await fetch(P24_BASE + "/api/v1/transaction/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
+        Authorization: "Basic " + auth,
       },
       body: JSON.stringify(orderData),
-      redirect: "manual",
     });
 
-    // PayU returns 302 redirect to payment page
-    if (res.status === 302 || res.status === 301) {
-      const redirectUrl = res.headers.get("Location");
-      return NextResponse.json({ redirectUrl });
-    }
-
     const data = await res.json();
-    if (data.redirectUri) {
-      return NextResponse.json({ redirectUrl: data.redirectUri });
-    }
-    if (data.status?.statusCode === "SUCCESS" && data.orderId) {
-      return NextResponse.json({ redirectUrl: data.redirectUri || origin + "/rezerwacje?payment=success" });
+
+    if (data.data?.token) {
+      return NextResponse.json({
+        redirectUrl: P24_BASE + "/trnRequest/" + data.data.token,
+        token: data.data.token,
+        sessionId,
+      });
     }
 
-    console.error("PayU error:", JSON.stringify(data));
-    return NextResponse.json({ error: data.status?.statusDesc || "Blad PayU" }, { status: 500 });
+    console.error("P24 error:", JSON.stringify(data));
+    return NextResponse.json({ error: data.error || "Blad Przelewy24" }, { status: 500 });
   } catch (e: any) {
-    console.error("POST /api/pay error:", e);
+    console.error("P24 error:", e);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

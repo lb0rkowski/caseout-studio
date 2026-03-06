@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     ).join("");
 
     const pkgLine = packageName ? "<p style=\"margin:8px 0 0;color:#C49767;font-size:14px;\">Pakiet: " + packageName + "</p>" : "";
-    const payLabel = payMethod === "payu" ? "Online (PayU)" : "Na miejscu";
+    const payLabel = payMethod === "payu" ? "Online (Przelewy24)" : "Na miejscu";
 
     const html = [
       "<div style=\"max-width:600px;margin:0 auto;background:#080C12;color:#D8D0C6;font-family:sans-serif;padding:40px;\">",

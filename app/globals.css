@@ -3,8 +3,9 @@
 @tailwind utilities;
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
-html{scroll-behavior:smooth}
-body{background:#080C12;color:#D8D0C6;font-family:'DM Sans',sans-serif;overflow-x:hidden;font-size:16px}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{background:#080C12;color:#D8D0C6;font-family:'DM Sans',sans-serif;overflow-x:hidden;font-size:16px;-webkit-text-size-adjust:100%;min-height:100dvh}
+#__next,main{overflow-x:hidden}
 ::selection{background:rgba(196,151,103,0.25);color:#F0EBE5}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#050810}::-webkit-scrollbar-thumb{background:#1A2030;border-radius:2px}
 *{scrollbar-width:thin;scrollbar-color:#1A2030 #050810;box-sizing:border-box}
